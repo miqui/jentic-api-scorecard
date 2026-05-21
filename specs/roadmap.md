@@ -18,19 +18,24 @@ The starting point is the current repository state: the `docker/` runner ships, 
 
 **Lifecycle:** when a phase ships, append ` ✅` (a single space followed by the U+2705 checkmark) to its `## Phase N — Title` heading and leave the rest of the block in place — do not delete or renumber. The leading space is load-bearing — completion-verify steps `grep -F` for the exact ` ✅` suffix. Phase numbers are stable identifiers; completed phases stay in the file as history. New work takes the next number after the largest existing phase.
 
-## Phase 1 — Ship CI: docker-image build + GHCR publish on tag
+## Phase 1 — Ship CI: checks, unstable image from main, versioned release on tag
 
-**Goal:** automate image builds so cutting a git tag publishes a versioned image to GHCR.
+**Goal:** establish CI quality gates on PRs, publish an `:unstable` image from every green `main` push, and publish versioned images on git tags.
 **Depends on:** none (self-contained CI scaffolding)
 **Priority:** High
 
-Currently every image is hand-built and hand-pushed; there's no recorded provenance and no enforcement that the image on GHCR matches the source tree at any tag. This phase makes the runner shippable.
+Currently every image is hand-built and hand-pushed; there's no recorded provenance, no enforcement that the image on GHCR matches the source tree at any tag, and no automated quality checks run on PRs. This phase makes the runner shippable and the development loop trustworthy.
 
-- Add `.github/workflows/docker-image.yml` triggered on tag refs `v*`.
-- Build context `./docker`; tag the resulting image as both `:<version>` (from the git tag) and `:latest`.
-- Push to `ghcr.io/jentic/jentic-api-scorecard` using the workflow's `GITHUB_TOKEN`.
-- Smoke-test the published image post-push: `docker run --rm <image> score --url <jentic-public-apis-url>` exits 0 and emits JSON with a `summary.score` field.
-- Update `docs/architecture.md` §4 / §8 only if the implemented workflow diverges from the description there.
+- Add `.github/workflows/ci.yml` triggered on PRs to `main` (paths: `docker/**`, `.github/workflows/ci.yml`). Also expose `workflow_call` + `workflow_dispatch` for reuse by the publish workflow.
+- Concurrency: `group: ci-${{ github.ref }}`, cancel in-progress on non-main refs.
+- Lint job: `uv sync --frozen` → `uv run poe lint` (ruff check + format check).
+- Test job: `uv sync --frozen` → `uv run poe test` (pytest).
+- Use `astral-sh/setup-uv` with Python 3.12 and uv cache enabled.
+- Add `.github/workflows/docker-publish.yml` triggered on pushes to `main` (paths: `docker/**`, `.github/workflows/docker-publish.yml`) and on `workflow_dispatch`.
+- Gate on CI: call `.github/workflows/ci.yml` via `workflow_call` as a prerequisite (`needs: ci`).
+- Build context `./docker`; tag the image as `:unstable`; push to `ghcr.io/jentic/jentic-api-scorecard`.
+- Use Docker Buildx with GHA cache (`cache-from: type=gha`, `cache-to: type=gha,mode=max`).
+- Update `docs/architecture.md` §4 / §8 only if the implemented workflows diverge from the descriptions there.
 
 ## Phase 2 — Scaffold packages/ + first end-to-end CLI smoke
 
