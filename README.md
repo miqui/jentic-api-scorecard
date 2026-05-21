@@ -1,0 +1,1 @@
+# Jentic API Scorecard
