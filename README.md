@@ -1,77 +1,119 @@
 # Jentic API Scorecard
 
-Score an OpenAPI document against the [Jentic API AI Readiness Framework (JAIRF)](https://github.com/jentic/api-ai-readiness-framework) and get a readable scorecard. Today the project ships as a public Docker image; an `npx @jentic/api-scorecard` CLI wrapper is on the roadmap (see [`docs/architecture.md`](docs/architecture.md)).
+Score an OpenAPI document against the
+[Jentic API AI Readiness Framework (JAIRF)](https://github.com/jentic/api-ai-readiness-framework)
+and get a readable scorecard. Today the project ships as a public Docker image; an
+`npx @jentic/api-scorecard` CLI wrapper is upcoming — see [`specs/roadmap.md`](specs/roadmap.md).
 
 ## What it does
 
-Pass an OpenAPI spec — by URL or by piping bundled JSON to the container — and the scorer evaluates it across six JAIRF dimensions (foundational compliance, developer experience, AI-readiness, agent usability, security, AI discoverability) and emits the result as JSON. Today the published Docker image is JSON-only; piping its output to `jq` is the way to read a score:
+Pass an OpenAPI spec — by URL or by piping bundled JSON to the container — and the scorer evaluates
+it across six JAIRF dimensions (foundational compliance, developer experience, AI-readiness, agent
+usability, security, AI discoverability) and emits the result as JSON. Today the published Docker
+image is JSON-only; piping its output to `jq` is the way to read a score:
 
 ```bash
-$ docker run --rm ghcr.io/jentic/jentic-api-scorecard \
-    score --url https://raw.githubusercontent.com/jentic/jentic-public-apis/refs/heads/main/apis/openapi/<spec-path> \
-  | jq '{score: .summary.score, level: .summary.level, grade: .summary.grade}'
+docker run --rm ghcr.io/jentic/jentic-api-scorecard:unstable \
+  score --url https://raw.githubusercontent.com/jentic/jentic-public-apis/refs/heads/main/apis/openapi/swagger-api/petstore/1.0.27/openapi.json \
+  | jq '.summary | {score, level, grade, dimensions: [.dimensions[] | {kind, name, score, grade}]}'
+```
+
+Example output:
+
+```json
 {
   "score": 68.62,
   "level": "ai-aware",
-  "grade": "B+"
+  "grade": "B+",
+  "dimensions": [
+    { "kind": "FC",   "name": "Foundational Compliance",                     "score": 99.51,  "grade": "A+" },
+    { "kind": "DXJ",  "name": "Developer Experience & Jentic Compatibility", "score": 68.89,  "grade": "B+" },
+    { "kind": "ARAX", "name": "AI-Readiness & Agent Experience",             "score": 54.62,  "grade": "C"  },
+    { "kind": "AU",   "name": "Agent Usability",                             "score": 93.70,  "grade": "A+" },
+    { "kind": "SEC",  "name": "Security",                                    "score": 42.50,  "grade": "D-" },
+    { "kind": "AID",  "name": "AI Discoverability",                          "score": 100.00, "grade": "A+" }
+  ]
 }
-```
-
-The npm CLI on the roadmap will layer a human-readable scorecard on top of the same JSON (target shape — *not yet shipped*, see [`docs/architecture.md`](docs/architecture.md) §1):
-
-```
-Jentic API Readiness Scorecard
-Source: https://petstore3.swagger.io/api/v3/openapi.json
-
-  Final score:    68.62 / 100
-  Readiness:      ai-aware  (B+)
-
-  Dimensions
-    FC    Foundational Compliance                          99.51  A+
-    DXJ   Developer Experience & Jentic Compatibility      68.89  B+
-    ARAX  AI-Readiness & Agent Experience                  54.62  C
-    AU    Agent Usability                                  93.70  A+
-    SEC   Security                                         42.50  D-
-    AID   AI Discoverability                              100.00  A+
 ```
 
 ## How it works
 
-The image bundles [`jentic-apitools-cli`](https://pypi.org/project/jentic-apitools-cli/) — the JAIRF scoring engine — alongside Python 3.12 and Node 24 (the engine spawns Redocly / Spectral / Speclynx via `npx`). Scoring runs locally inside the container; URL inputs are fetched by the engine, stdin inputs are written to a tempfile and scored from there. Anonymous scoring is restricted to specs in [jentic-public-apis](https://github.com/jentic/jentic-public-apis); other inputs require `JENTIC_API_KEY=mvp-preview` (a documented public placeholder for the MVP preview, not a secret). For the full architecture and design rationale, see [`docs/architecture.md`](docs/architecture.md).
+Scoring runs locally inside the container in two phases. **Analysis** runs a battery of validators
+and structural checks against the spec — and, with `--with-llm`, LLM-backed signals on top — to
+produce a set of diagnostics and observations. **Scoring** maps those into ~35 signals across the six
+JAIRF dimensions, aggregates them into per-dimension scores, and rolls those up into a single weighted
+score and grade. Anonymous scoring is restricted to specs in
+[jentic-public-apis](https://github.com/jentic/jentic-public-apis); other inputs require
+`JENTIC_API_KEY=mvp-preview` (a documented public placeholder for the MVP preview, not a secret).
 
 ## Quick start
 
-Score an allowlisted public spec, no key required (replace `<spec-path>` with any path under [jentic-public-apis/apis/openapi/](https://github.com/jentic/jentic-public-apis/tree/main/apis/openapi)):
+### Score an allowlisted public spec
+
+No key required (swap in any other path under
+[jentic-public-apis/apis/openapi/](https://github.com/jentic/jentic-public-apis/tree/main/apis/openapi)):
 
 ```bash
-docker run --rm ghcr.io/jentic/jentic-api-scorecard \
-  score --url https://raw.githubusercontent.com/jentic/jentic-public-apis/refs/heads/main/apis/openapi/<spec-path>
+docker run --rm ghcr.io/jentic/jentic-api-scorecard:unstable \
+  score --url https://raw.githubusercontent.com/jentic/jentic-public-apis/refs/heads/main/apis/openapi/swagger-api/petstore/1.0.27/openapi.json \
+  | jq '.summary | {score, level, grade, dimensions: [.dimensions[] | {kind, name, score, grade}]}'
 ```
 
-Score any other URL or a local spec — set the MVP preview key:
+### Score any other URL — set the MVP preview key
 
 ```bash
-docker run --rm \
-  -e JENTIC_API_KEY=mvp-preview \
-  ghcr.io/jentic/jentic-api-scorecard \
-  score --url https://petstore3.swagger.io/api/v3/openapi.json
+docker run --rm -e JENTIC_API_KEY=mvp-preview ghcr.io/jentic/jentic-api-scorecard:unstable \
+  score --url https://petstore3.swagger.io/api/v3/openapi.json \
+  | jq '.summary | {score, level, grade, dimensions: [.dimensions[] | {kind, name, score, grade}]}'
 ```
 
-Pipe a local spec via stdin:
+### Pipe a local spec via stdin
 
 ```bash
-cat openapi.json | docker run -i --rm \
-  -e JENTIC_API_KEY=mvp-preview \
-  ghcr.io/jentic/jentic-api-scorecard \
-  score
+cat openapi.json | docker run -i --rm -e JENTIC_API_KEY=mvp-preview ghcr.io/jentic/jentic-api-scorecard:unstable \
+  score \
+  | jq '.summary | {score, level, grade, dimensions: [.dimensions[] | {kind, name, score, grade}]}'
 ```
 
-Add `--with-llm` (and forward an LLM provider key, e.g. `-e OPENAI_API_KEY`) to enable LLM-backed signal analysis.
+Add `--with-llm` to enable LLM-backed signal analysis. Forward at least one supported provider's
+keys to the container with `-e <NAME>` — no `=value`; Docker copies the value from your shell at
+run time, so the key never lands in your shell history:
+
+| Provider    | Forward with                                                  |
+| ----------- | ------------------------------------------------------------- |
+| OpenAI      | `-e OPENAI_API_KEY`                                           |
+| Anthropic   | `-e ANTHROPIC_API_KEY`                                        |
+| Gemini      | `-e GEMINI_API_KEY`                                           |
+| AWS Bedrock | `-e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION` |
+
+For AWS Bedrock with temporary credentials (e.g. `aws sts assume-role`, AWS SSO), also forward
+`-e AWS_SESSION_TOKEN`.
+
+Example (OpenAI, allowlisted public spec — no `JENTIC_API_KEY` needed):
+
+```bash
+docker run --rm -e OPENAI_API_KEY ghcr.io/jentic/jentic-api-scorecard:unstable \
+  score --with-llm \
+  --url https://raw.githubusercontent.com/jentic/jentic-public-apis/refs/heads/main/apis/openapi/swagger-api/petstore/1.0.27/openapi.json \
+  | jq '.summary | {score, level, grade, dimensions: [.dimensions[] | {kind, name, score, grade}]}'
+```
+
 
 ## Status
 
-Delivery 1 of the scorecard ships only the GHCR image — direct `docker run` is the supported invocation today. The `@jentic/api-scorecard` npm wrapper that orchestrates the image, host-side spec bundling, and the pretty CLI UX is planned but not yet published. Track scope and roadmap in [`docs/architecture.md`](docs/architecture.md); file issues at https://github.com/jentic/jentic-api-scorecard/issues.
+Today the scorecard ships only as the GHCR image — direct `docker run` is the supported invocation,
+and the only published tag is `:unstable`.
+
+`:unstable` is rebuilt on every push to `main`. Docker caches by tag name,
+so subsequent runs reuse your local copy — pass `--pull=always` when you want the latest build.
+
+```bash
+docker run --pull=always --rm ghcr.io/jentic/jentic-api-scorecard:unstable \
+  score --url https://raw.githubusercontent.com/jentic/jentic-public-apis/refs/heads/main/apis/openapi/swagger-api/petstore/1.0.27/openapi.json \
+  | jq '.summary | {score, level, grade, dimensions: [.dimensions[] | {kind, name, score, grade}]}'
+```
 
 ## License
 
-Apache 2.0 — see [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).
+Jentic API Scorecard is licensed under the [Apache 2.0](LICENSE) license. Jentic API Scorecard comes
+with an explicit [NOTICE](NOTICE) file containing additional legal notices and information.
