@@ -81,6 +81,8 @@ cat openapi.json | docker run -i --rm -e JENTIC_API_KEY=mvp-preview ghcr.io/jent
   | jq '.summary | {score, level, grade, dimensions: [.dimensions[] | {kind, name, score, grade}]}'
 ```
 
+## LLM-backed analysis
+
 Add `--with-llm` to enable LLM-backed signal analysis. Forward at least one supported provider's
 keys to the container with `-e <NAME>` — no `=value`; Docker copies the value from your shell at
 run time, so the key never lands in your shell history:
