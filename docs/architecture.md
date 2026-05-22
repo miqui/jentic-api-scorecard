@@ -30,8 +30,8 @@ Source: https://petstore3.swagger.io/api/v3/openapi.json
     SEC   Security                                         42.50  D-
     AID   AI Discoverability                              100.00  A+
 
-  Run with --verbose for signal breakdown.
-  Full report: --format json --include-diagnostics
+  Run with --detail signals for signal breakdown.
+  Full report: --format json --detail diagnostics
 ```
 
 ## 2. Architectural decisions at a glance
@@ -51,7 +51,7 @@ Source: https://petstore3.swagger.io/api/v3/openapi.json
 | Engine | [`jentic-apitools-cli`](https://pypi.org/project/jentic-apitools-cli/) on PyPI. Image bundles Python 3.12 + Node 24 (engine spawns Redocly / Spectral / Speclynx via npx). |
 | LLM analysis | Off by default. Opt-in via `--with-llm`; CLI forwards present provider env vars (OpenAI / Anthropic / Gemini / AWS) to the container, which passes `--enable-llm-analysis` to the engine. |
 | Usage tracking | Out of scope for Delivery 1. No container-side calls to Jentic. |
-| Default output | Headline + dimensions on stdout; spinner phases on stderr. `--verbose` adds signal breakdown; `--include-diagnostics` adds raw diagnostics. `--format json` for machine-readable output. |
+| Default output | Headline + dimensions on stdout; spinner phases on stderr. `--detail` controls payload depth (summary → dimensions → signals → diagnostics). `--format json` for machine-readable output. |
 | Out of scope (MVP) | HTML rendering wired in (renderer package scaffolded only); user-facing image flags (image management is fully abstracted by the CLI); subcommands beyond `score` (no `login` / `whoami` / etc.); creds file persistence; rate limiting beyond URL allowlist. |
 
 ## 3. Component diagram
@@ -120,7 +120,7 @@ jentic-api-scorecard/
 │   │       ├── auth.ts                       (read JENTIC_API_KEY env)
 │   │       ├── bundle.ts                     (@redocly/openapi-core)
 │   │       ├── docker.ts                     (spawn('docker', …))
-│   │       ├── render.ts                     (pretty table + --format + --verbose)
+│   │       ├── render.ts                     (pretty table + --format + --detail)
 │   │       └── spinner.ts                    (stderr phase spinner)
 │   └── html-renderer/                        (@jentic/api-scorecard-html — stub)
 │       ├── package.json
@@ -160,8 +160,8 @@ The CLI exposes a single subcommand for Delivery 1: `score <input>`. Scoring an 
 |---|---|---|
 | `--format <fmt>` / `-f` | `pretty` | Output encoding. Values: `pretty` (human-readable table), `json` (machine-readable JSON), `markdown` (Markdown report). `pretty` is the default for interactive use; `json` is the default when stdout is not a TTY (piped/redirected). |
 | `--json` | — | Convenience alias for `--format json`. Kept for discoverability and ergonomics in simple CLIs, but `--format` is the canonical flag. |
-| `--include-diagnostics` | off | Include raw diagnostics in the report payload. Diagnostics can be large (thousands of entries on complex specs). Without this flag, only the score/dimension/signal summary is emitted. Applies to all formats. |
-| `--verbose` / `-v` | off | Increase human-readable explanation and logging. In `pretty` format: adds the per-signal breakdown table. In `json`/`markdown`: no effect on the payload (use `--include-diagnostics` for that). Does not imply `--include-diagnostics` — those are orthogonal concerns. |
+| `--detail <level>` / `-d` | `dimensions` | Controls payload depth — how much of the scoring result is included in output. Values form a graduated hierarchy: `summary` (score + grade + level only), `dimensions` (+ dimension table), `signals` (+ per-signal breakdown), `diagnostics` (+ raw diagnostics array). Each level includes everything below it. Applies uniformly to all formats (pretty, json, markdown). |
+| `--verbose` / `-v` | off | Increase stderr logging verbosity. Shows engine progress, validator invocation details, timing breakdowns, and internal debug info. Does not affect the report payload (stdout) — use `--detail` for that. Orthogonal to `--quiet` (which suppresses the spinner). |
 | `--quiet` / `-q` | off | Suppress stderr spinner. Engine warnings still pass through stderr (they're a small, bounded signal). Pretty/JSON stdout unchanged. The spinner ALSO auto-suppresses when stderr is not a TTY (CI logs, redirected stderr) — `--quiet` is the explicit override for interactive shells. |
 | `--output` / `-o` `<file>` | stdout | Write report output to `<file>` instead of stdout. Useful for CI artifacts, Windows scripts, and future HTML/Markdown outputs where shell redirection is awkward. When set, spinner still goes to stderr. |
 | `--with-llm` | off | Enable LLM-backed analysis in the engine (`jentic-apitools score --enable-llm-analysis`). Requires at least one supported provider env var set in the CLI's environment (e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, or `AWS_*`); CLI errors if none are present. CLI forwards every provider env var that IS set to the container via `-e <NAME>` (passthrough form). |
@@ -232,24 +232,36 @@ Three orthogonal concepts control output:
 | Concept | Flag | Controls |
 |---|---|---|
 | **Format** | `--format <fmt>` / `-f` | How output is encoded: `pretty`, `json`, `markdown`. |
-| **Verbosity** | `--verbose` / `-v` | How much human-readable explanation is shown (pretty mode only). |
-| **Diagnostics** | `--include-diagnostics` | Whether raw diagnostics are included in the report payload (all formats). |
+| **Detail level** | `--detail <level>` / `-d` | How much of the scoring result is included in the payload (stdout). |
+| **Verbosity** | `--verbose` / `-v` | How much internal logging goes to stderr. |
 
-These are independent. `--format json --include-diagnostics` gives a machine-readable report with full evidence. `--format pretty --verbose` gives a human-readable deep-dive without the raw diagnostics payload. `--format json` alone gives a compact summary suitable for CI storage.
+Format and detail are independent axes. Any format can be combined with any detail level. Verbosity is orthogonal to both — it controls stderr logging (engine progress, validator invocations, timing), not the report payload.
 
-Output depth matrix:
+#### Detail levels
 
-| Mode | Content | Approx size |
+Detail levels form a strict hierarchy — each level includes everything from the levels below it:
+
+| Level | Includes | Typical use |
 |---|---|---|
-| Default (`pretty`) | headline + dimensions | ~12 lines |
-| `pretty --verbose` | + per-signal breakdown | ~80–150 lines |
-| `pretty --verbose --include-diagnostics` | + diagnostics grouped by source/severity | ~150–500 lines |
-| `json` | summary + dimensions + signals | ~5 KB |
-| `json --include-diagnostics` | + full diagnostics array | ~50–500 KB |
-| `markdown` | summary + dimensions (Markdown table) | ~30 lines |
-| `markdown --include-diagnostics` | + diagnostics as Markdown list | ~100–300 lines |
+| `summary` | Score + grade + readiness level | CI badge, one-liner status checks |
+| `dimensions` (default) | + dimension table (kind, name, score, grade) | Human "at a glance" view, lightweight CI artifacts |
+| `signals` | + per-signal breakdown (~35 signals with `[0, 1]` scores) | "What should I fix?" escalation |
+| `diagnostics` | + raw diagnostics array (sources: `redocly-validator`, `spectral-validator`, `speclynx-validator`, `default-validator`, `loader`; severity: LSP integers 1=error, 2=warning, 3=info, 4=hint) | Full evidence bundle, debugging |
 
-**Default (pretty)** — stdout:
+#### Detail × format matrix
+
+| Detail | `pretty` | `json` | `markdown` |
+|---|---|---|---|
+| `summary` | headline only (~3 lines) | `{ metadata, apiMetadata, summary }` minus `dimensions` (~200 B) | score line only |
+| `dimensions` | headline + dimension table (~12 lines) | `{ metadata, apiMetadata, summary }` with `dimensions` (~1 KB) | summary + dimension Markdown table (~30 lines) |
+| `signals` | + per-signal expansion (~80–150 lines) | + `details[].dimensions[].signals[]` (~5 KB) | + signal list per dimension (~80–120 lines) |
+| `diagnostics` | + diagnostics grouped by source/severity (~150–500 lines) | + `diagnostics[]` array (~50–500 KB) | + diagnostics as Markdown list (~100–300 lines) |
+
+The dimension layout matches `summary.dimensions[]` directly (`kind`, `name`, `score`, `grade`). JAIRF weights are not surfaced in the engine's `summary` payload, so the pretty renderer does not show them — if we want a weight column post-MVP, we hard-code the JAIRF-spec weights in the renderer rather than asking the engine for them.
+
+Diagnostic sources mirror the engine. Severity uses LSP integers (1=error, 2=warning, 3=info, 4=hint), surfaced as labels in pretty output.
+
+#### Default pretty output (`--detail dimensions`)
 
 ```
 Jentic API Readiness Scorecard
@@ -266,17 +278,22 @@ Source: <path or URL>
     SEC   Security                                         42.50  D-
     AID   AI Discoverability                              100.00  A+
 
-  Run with --verbose for signal breakdown.
-  Full report: --format json --include-diagnostics
+  Run with --detail signals for signal breakdown.
+  Full report: --format json --detail diagnostics
 ```
 
-The dimension layout matches `summary.dimensions[]` directly (`kind`, `name`, `score`, `grade`). JAIRF weights are not surfaced in the engine's `summary` payload, so the pretty renderer does not show them — if we want a weight column post-MVP, we hard-code the JAIRF-spec weights in the renderer rather than asking the engine for them.
+#### JSON output
 
-**`--verbose` (pretty + signals)**: the default block above, plus a per-dimension expansion of all ~35 signals (showing each signal's `[0, 1]` score and short name). This is the "what should I fix" escalation for human readers. Does NOT include raw diagnostics — add `--include-diagnostics` for that.
+The engine's result JSON to stdout (see §7). The CLI filters the payload based on `--detail`:
 
-**`--include-diagnostics`**: appends the raw diagnostics payload to the output. In pretty mode, diagnostics are grouped by source/severity. Diagnostic sources mirror the engine: `redocly-validator`, `spectral-validator`, `speclynx-validator`, `default-validator`, `loader`. Severity uses LSP integers (1=error, 2=warning, 3=info, 4=hint), surfaced as labels in pretty output. In JSON mode, the `diagnostics` array is included in the result object.
+- `summary`: emits only `metadata`, `apiMetadata`, and `summary` (with `dimensions` array removed from `summary`).
+- `dimensions` (default): emits `metadata`, `apiMetadata`, and `summary` (with `dimensions` array intact).
+- `signals`: adds the `details` array (which contains `dimensions[].signals[]`).
+- `diagnostics`: adds the `diagnostics` array.
 
-**`--format json`** — the engine's result JSON to stdout (see §7). Without `--include-diagnostics`, the `diagnostics` array is omitted to keep the payload compact. Spinner still appears on stderr unless `--quiet`.
+Spinner still appears on stderr unless `--quiet`.
+
+#### Other output controls
 
 **`-o FILE`** — when set, report output is written to `<file>` instead of stdout. Spinner and engine warnings remain on stderr. Equivalent to shell redirection but portable to Windows and explicit in CI scripts.
 
@@ -470,7 +487,7 @@ CLI translates these to its own exit codes plus user-friendly messages.
 
 ## 7. Result JSON schema
 
-The CLI does not invent a schema. It emits **whatever `jentic-apitools score --format json` emits, verbatim** (minus the `diagnostics` array unless `--include-diagnostics` is set). Reformatting in the renderer (`--verbose`, pretty output, Markdown) is a read-only projection — keys are not renamed, restructured, or filtered. The pretty/HTML/Markdown renderers tolerate unknown keys and absent optional keys, so engine bumps that add new fields don't break rendering.
+The CLI does not invent a schema. It emits **whatever `jentic-apitools score --format json` emits, verbatim**, filtered by `--detail` level (see §5). The container always requests full output (`--include-diagnostics`) from the engine; the CLI strips fields the user didn't ask for based on `--detail`. Reformatting in the renderer (pretty output, Markdown) is a read-only projection — keys are not renamed, restructured, or filtered. The pretty/HTML/Markdown renderers tolerate unknown keys and absent optional keys, so engine bumps that add new fields don't break rendering.
 
 The shape below was captured by running `jentic-apitools score https://petstore3.swagger.io/api/v3/openapi.json` against `jentic-apitools-cli==1.0.0a16`. Treat this as a sample, not a contract — the engine owns the schema.
 
@@ -565,10 +582,10 @@ The shape below was captured by running `jentic-apitools score https://petstore3
 
 **Notes for renderer / consumer code:**
 
-- Top-level: `metadata`, `apiMetadata`, `summary`, `details`, and optionally `diagnostics` (when `--include-diagnostics` is set). The CLI's `--format json` flag emits this object as-is.
+- Top-level: `metadata`, `apiMetadata`, `summary`, `details`, and optionally `diagnostics`. The CLI filters based on `--detail` level: `summary` strips `dimensions` from `summary` and omits `details`/`diagnostics`; `dimensions` (default) includes `summary.dimensions[]` but omits `details`/`diagnostics`; `signals` adds `details`; `diagnostics` adds `diagnostics`.
 - The headline-line in our pretty renderer maps directly: `summary.score`, `summary.level`, `summary.grade`.
 - The dimension table maps to `summary.dimensions[]` with `kind` / `name` / `intention` / `score` / `grade`. **Weights are not in the JSON anywhere** — they live only inside the engine's aggregation code. If a future renderer wants a "weight" column, hard-code the JAIRF-spec values (FC 0.16, DXJ 0.18, ARAX 0.24, AU 0.20, SEC 0.12, AID 0.10).
-- `--verbose` walks `details[].dimensions[].signals[]` for the per-signal breakdown.
+- `--detail signals` walks `details[].dimensions[].signals[]` for the per-signal breakdown.
 - `signals[].score` is in `[0, 1]` (engine-normalized); group / dimension / overall scores are `[0, 100]`. Renderers must not multiply by 100 in one place and forget in another.
 - `signals[].metadata` is freeform per-signal — engine adds whatever context that signal cares about. Renderers should treat it as opaque (display verbatim or omit).
 - **Compatibility tactic**: the renderer reads only the keys it understands and ignores everything else. Engine version bumps that add fields (or rename signals) don't break rendering; they may cause new fields not to appear in pretty output until the renderer is updated.
@@ -630,14 +647,16 @@ When the implementation lands, these acceptance checks validate the architecture
 - `JENTIC_API_KEY=garbage npx @jentic/api-scorecard score ./local.yaml` → exit 2 with placeholder-key error message.
 - `JENTIC_API_KEY=mvp-preview npx @jentic/api-scorecard score ./local.yaml` → success; spinner shows `Bundling ./local.yaml…`.
 
-**Output formats:**
+**Output formats and detail levels:**
 - `npx @jentic/api-scorecard score <input> --format json | jq .summary.score` → numeric, no chrome on stdout.
 - `npx @jentic/api-scorecard score <input> --json | jq .summary.score` → same (alias works).
-- `npx @jentic/api-scorecard score <input> --verbose` → output includes all ~35 signals grouped by dimension.
-- `npx @jentic/api-scorecard score <input> --verbose --include-diagnostics` → output includes diagnostics grouped by source (`redocly-validator`, `spectral-validator`, `speclynx-validator`) and severity.
-- `npx @jentic/api-scorecard score <input> --format json --verbose` produces byte-identical output to `--format json` alone (`--verbose` does not change JSON payloads).
+- `npx @jentic/api-scorecard score <input> --detail signals` → output includes all ~35 signals grouped by dimension.
+- `npx @jentic/api-scorecard score <input> --detail diagnostics` → output includes diagnostics grouped by source (`redocly-validator`, `spectral-validator`, `speclynx-validator`) and severity.
+- `npx @jentic/api-scorecard score <input> --detail summary` → only headline (score + grade + level), no dimension table.
+- `npx @jentic/api-scorecard score <input> --format json --detail signals` → JSON includes `details[].dimensions[].signals[]`.
+- `npx @jentic/api-scorecard score <input> --format json --detail diagnostics` → JSON includes `diagnostics` array.
 - `npx @jentic/api-scorecard score <input> --format json -o report.json` → writes to file, no stdout.
-- `npx @jentic/api-scorecard score <input> --format json --include-diagnostics` → JSON includes `diagnostics` array.
+- `npx @jentic/api-scorecard score <input> --verbose` → extra stderr logging (engine progress, timing), report payload unchanged.
 
 **Bundle / LLM:**
 - `JENTIC_API_KEY=mvp-preview npx @jentic/api-scorecard score https://internal.example/openapi.yaml --bundle` → CLI fetches host-side, bundles, pipes to container; success.

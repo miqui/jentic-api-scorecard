@@ -4,12 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What is the Jentic API Scorecard?
 
-A zero-install CLI that scores an OpenAPI document against the Jentic API AI Readiness Framework (JAIRF) and prints a Jentic API Readiness Scorecard. Distribution: an npm package (`@jentic/api-scorecard`) that orchestrates a public Docker image (`ghcr.io/jentic/jentic-api-scorecard`). The CLI fully abstracts image management; no backend service is in the loop. See @../docs/architecture.md — that document is the **single source of truth** for product, architecture, and decisions; do not duplicate its content here or in memory.
+A zero-install CLI that scores an OpenAPI document against the Jentic API AI Readiness Framework (JAIRF) and prints a Jentic API Readiness Scorecard. Distribution: an npm package (`@jentic/api-scorecard`) that orchestrates a public Docker image (`ghcr.io/jentic/jentic-api-scorecard`). The CLI fully abstracts image management; no backend service is in the loop. See `docs/architecture.md` — that document is the **single source of truth** for product, architecture, and decisions; do not duplicate its content here or in memory.
 
 ## Repository state today
 
 - **`docker/`** — the only code that exists. A Python 3.12 + uv runner image that wraps `jentic-apitools-cli` (the JAIRF scoring engine). This is everything that ships in v0.1.
-- **`packages/`** — does **not** exist yet. The TypeScript CLI (`@jentic/api-scorecard`) and a stub HTML renderer are on the roadmap per @../docs/architecture.md §4.
+- **`packages/`** — does **not** exist yet. The TypeScript CLI (`@jentic/api-scorecard`) and a stub HTML renderer are on the roadmap per `docs/architecture.md` §4.
 - **`docs/architecture.md`** — the architecture document and the source of truth for every product/architectural claim.
 - **`specs/`** — the SDD constitution: `specs/mission.md`, `specs/tech-stack.md`, `specs/roadmap.md` (plus an empty `specs/lessons.md` placeholder that `/sdd-distill-lessons` will fill once retrospectives land). The constitution captures load-bearing invariants and points at `docs/architecture.md` for operational detail. Bootstrapped via `/sdd-create-constitution`; future phases append via `/sdd-new-phase` and materialize via `/sdd-new-spec`.
 
@@ -25,14 +25,14 @@ When you read this file and find a mismatch with what's on disk (e.g. `packages/
 2. **Gate check** — `gate.check_gate(url)` decides whether the request is allowed.
 3. **Score** — `score.run_score(url, with_llm)` invokes `jentic-apitools score …` and streams the JSON result to stdout.
 
-**The gate MUST run before the engine.** If you reorder the two, anonymous inputs reach the scoring engine without the URL allowlist enforcement, defeating the auth model in @../docs/architecture.md §9. Symptom: `--url` to a non-allowlisted host returns a normal score instead of exit code 3.
+**The gate MUST run before the engine.** If you reorder the two, anonymous inputs reach the scoring engine without the URL allowlist enforcement, defeating the auth model in `docs/architecture.md` §9. Symptom: `--url` to a non-allowlisted host returns a normal score instead of exit code 3.
 
 ### Auth and the gate (`docker/src/jentic_scorecard_runner/gate.py`)
 
 | `JENTIC_API_KEY` | Effect |
 |---|---|
 | Unset | Anonymous mode — only URLs matching `https://raw.githubusercontent.com/jentic/jentic-public-apis/refs/heads/main/apis/openapi/` are allowed; stdin inputs are rejected. |
-| `mvp-preview` | All inputs allowed. This is the documented public placeholder for Delivery 1 — **not a secret**, see @../docs/architecture.md §9. |
+| `mvp-preview` | All inputs allowed. This is the documented public placeholder for Delivery 1 — **not a secret**, see `docs/architecture.md` §9. |
 | Anything else | Rejected with a guidance message pointing back at `mvp-preview`. |
 
 The allowlist regex lives in `gate.py` as `_ALLOWLIST_PATTERN`. The placeholder key value lives in `gate.py` as `_MVP_KEY`. Real key issuance (HTTP validation against `api.jentic.com`) is deferred to a follow-up delivery; until then, do not extend the gate to add new accepted values.
@@ -43,7 +43,7 @@ The allowlist regex lives in `gate.py` as `_ALLOWLIST_PATTERN`. The placeholder 
 
 ### Exit codes (`docker/src/jentic_scorecard_runner/exit_codes.py`)
 
-`SUCCESS=0`, `GENERIC_ERROR=1`, `AUTH_INVALID_KEY=2`, `GATE_REJECTED=3`, `SPEC_FAILURE=5`, `ENGINE_FAILURE=6`. These are part of the public CLI contract — see @../docs/architecture.md §6 before changing values.
+`SUCCESS=0`, `GENERIC_ERROR=1`, `AUTH_INVALID_KEY=2`, `GATE_REJECTED=3`, `SPEC_FAILURE=5`, `ENGINE_FAILURE=6`. These are part of the public CLI contract — see `docs/architecture.md` §6 before changing values.
 
 ### Image build (`docker/Dockerfile`)
 

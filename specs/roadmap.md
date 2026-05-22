@@ -160,6 +160,8 @@ Sequenced after Phase 3 ships JSON / Markdown stably — CI integrators need a s
 
 ## Later Phases (Not Yet Planned)
 
+- Native binary distribution via `curl -fsSL | bash` (self-extracting archive bundling Node + node_modules; platform-specific builds in CI; requires code signing for macOS/Windows)
+- CLI connecting to remote docker instance with `--api-url` option
 - Multi-spec / portfolio scoring across many APIs in one invocation
 - Plugins / custom rubrics on top of JAIRF
 - `--cpus` / `--memory` flags + matching engine worker-pool hints (deferred until a concrete user-pain signal)
