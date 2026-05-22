@@ -1,8 +1,8 @@
 import { spawn } from 'node:child_process';
 import { constants as osConstants } from 'node:os';
 
-import { ExitCode } from './exit-codes.js';
-import { cliVersion } from './version.js';
+import { ExitCode } from './exit-codes.ts';
+import { cliVersion } from './version.ts';
 
 export const IMAGE_NAME = 'ghcr.io/jentic/jentic-api-scorecard';
 
@@ -38,11 +38,7 @@ export function runDocker(opts: DockerRunOptions): Promise<DockerRunResult> {
 
   return new Promise((resolve, reject) => {
     const child = spawn('docker', dockerArgs, {
-      stdio: [
-        opts.stdinPayload !== undefined ? 'pipe' : 'inherit',
-        'inherit',
-        'inherit',
-      ],
+      stdio: [opts.stdinPayload !== undefined ? 'pipe' : 'inherit', 'inherit', 'inherit'],
     });
 
     let settled = false;
