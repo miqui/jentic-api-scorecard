@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-alpha.2](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.1...v1.0.0-alpha.2) (2026-05-23)
+
+### Bug Fixes
+
+- **release:** fix failed 1.0.0-alpha.1 release ([6047f20](https://github.com/jentic/jentic-api-scorecard/commit/6047f20ef965aa3a14604a96252c4d58c096f60a))
+
 # 1.0.0-alpha.1 (2026-05-23)
 
 ### Features
