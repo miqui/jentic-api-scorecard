@@ -1,18 +1,37 @@
 # Jentic API Scorecard
 
-Score an OpenAPI document against the
+![Jentic API Scorecard preview](assets/scorecard-preview.jpg)
+
+A spec that passes OpenAPI validation isn't necessarily one an AI agent can use. Grammar is one
+thing; semantic clarity, safety, and discoverability are another. The Jentic API Scorecard measures
+where your spec stands on the second question — scoring it against the
 [Jentic API AI Readiness Framework (JAIRF)](https://github.com/jentic/api-ai-readiness-framework)
-and get a readable scorecard. The project ships in two pieces: the public Docker image
-`ghcr.io/jentic/jentic-api-scorecard`, and an `@jentic/api-scorecard` npm CLI that orchestrates the
-image. Both are tracked in this monorepo (`packages/cli/` for the CLI, `docker/` for the image).
-Per-phase progress lives in [`specs/roadmap.md`](specs/roadmap.md).
+across six dimensions and returning a single grade.
+
+The project ships in two pieces: the public Docker image `ghcr.io/jentic/jentic-api-scorecard`,
+and an `@jentic/api-scorecard` npm CLI that orchestrates the image. Both are tracked in this
+monorepo (`packages/cli/` for the CLI, `docker/` for the image). Per-phase progress lives in
+[`specs/roadmap.md`](specs/roadmap.md).
+
+## What it scores
+
+Each spec is evaluated across six lenses — small, targeted improvements in any of them tend to
+produce outsized gains for both human developers and AI agents:
+
+- **Foundational Compliance (FC)** — structural validity and conformance to OpenAPI itself.
+- **Developer Experience & Jentic Compatibility (DXJ)** — documentation quality and how well the
+  spec plays with downstream tooling.
+- **AI-Readiness & Agent Experience (ARAX)** — semantic clarity and the context an LLM needs to
+  reason about each operation.
+- **Agent Usability (AU)** — predictable, safe multi-step orchestration.
+- **Security (SEC)** — declared auth schemes and trust boundaries.
+- **AI Discoverability (AID)** — how easily an AI system can find and parse the spec.
 
 ## What it does
 
 Pass an OpenAPI spec — by URL or by piping bundled JSON to the container — and the scorer evaluates
-it across six JAIRF dimensions (foundational compliance, developer experience, AI-readiness, agent
-usability, security, AI discoverability) and emits the result as JSON. Today the published Docker
-image is JSON-only; piping its output to `jq` is the way to read a score:
+it across the six dimensions above and emits the result as JSON. Today the published Docker image
+is JSON-only; piping its output to `jq` is the way to read a score:
 
 ```bash
 docker run --rm ghcr.io/jentic/jentic-api-scorecard:unstable \
