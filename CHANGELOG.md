@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-alpha.5](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.4...v1.0.0-alpha.5) (2026-05-23)
+
+### Bug Fixes
+
+- **release:** remove dist-tag alignment step ([516f7e9](https://github.com/jentic/jentic-api-scorecard/commit/516f7e9bf2b9161e4fcb850dd30516847fdc357e))
+- **release:** remove dist-tag alignment step ([f434efd](https://github.com/jentic/jentic-api-scorecard/commit/f434efdb5df89b551522671e169c025f458b84c8))
+
 # [1.0.0-alpha.4](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.3...v1.0.0-alpha.4) (2026-05-23)
 
 ### Bug Fixes

@@ -1,6 +1,6 @@
 {
   "name": "@jentic/api-scorecard-cli",
-  "version": "1.0.0-alpha.4",
+  "version": "1.0.0-alpha.5",
   "description": "Score an OpenAPI document against the Jentic API AI Readiness Framework (JAIRF).",
   "keywords": [
     "api",
