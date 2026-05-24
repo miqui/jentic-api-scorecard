@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-alpha.12](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.11...v1.0.0-alpha.12) (2026-05-24)
+
+### Bug Fixes
+
+- **docker-publish:** resolve per-platform digests from registry index ([#33](https://github.com/jentic/jentic-api-scorecard/issues/33)) ([f0daee3](https://github.com/jentic/jentic-api-scorecard/commit/f0daee3771eb9a728261f74f44b7a382f0fb8cdc))
+
 # [1.0.0-alpha.11](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.10...v1.0.0-alpha.11) (2026-05-24)
 
 ### Bug Fixes
