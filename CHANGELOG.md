@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-alpha.18](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.17...v1.0.0-alpha.18) (2026-05-24)
+
+### Bug Fixes
+
+- **release:** push docker image before cli npm tarball ([38d9191](https://github.com/jentic/jentic-api-scorecard/commit/38d91919fa9fb7aa951549a92f519ef1ffae2402))
+
 # [1.0.0-alpha.17](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.16...v1.0.0-alpha.17) (2026-05-24)
 
 ### Features
