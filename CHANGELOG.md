@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-alpha.13](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.12...v1.0.0-alpha.13) (2026-05-24)
+
+### Bug Fixes
+
+- **release:** widen tarball retry to handle slow CDN writes ([#34](https://github.com/jentic/jentic-api-scorecard/issues/34)) ([844d178](https://github.com/jentic/jentic-api-scorecard/commit/844d1788de03ae39ebe39a788bb81179d7453fca))
+
 # [1.0.0-alpha.12](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.11...v1.0.0-alpha.12) (2026-05-24)
 
 ### Bug Fixes
