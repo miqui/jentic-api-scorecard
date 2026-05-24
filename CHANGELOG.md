@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-alpha.10](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.9...v1.0.0-alpha.10) (2026-05-24)
+
+### Bug Fixes
+
+- **release:** widen npm pack retry budget for CDN propagation ([#29](https://github.com/jentic/jentic-api-scorecard/issues/29)) ([84d636b](https://github.com/jentic/jentic-api-scorecard/commit/84d636b887de4824be440bdd1b9cf3991e0c7036))
+
 # [1.0.0-alpha.9](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.8...v1.0.0-alpha.9) (2026-05-24)
 
 ### Bug Fixes
