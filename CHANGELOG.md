@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-alpha.14](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.13...v1.0.0-alpha.14) (2026-05-24)
+
+### Bug Fixes
+
+- **dockerfile:** add OCI image labels ([#36](https://github.com/jentic/jentic-api-scorecard/issues/36)) ([72a9d5a](https://github.com/jentic/jentic-api-scorecard/commit/72a9d5a319852786718e3e20f8dcc880e8dbd52a))
+
 # [1.0.0-alpha.13](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.12...v1.0.0-alpha.13) (2026-05-24)
 
 ### Bug Fixes
