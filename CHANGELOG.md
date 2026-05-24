@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-alpha.7](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.6...v1.0.0-alpha.7) (2026-05-24)
+
+### Features
+
+- **release:** attest SPDX SBOM for the CLI tarball ([#26](https://github.com/jentic/jentic-api-scorecard/issues/26)) ([597a28d](https://github.com/jentic/jentic-api-scorecard/commit/597a28dc7f75cd0427268cc3fcee33606c469da0))
+
 # [1.0.0-alpha.6](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.5...v1.0.0-alpha.6) (2026-05-23)
 
 ### Bug Fixes
