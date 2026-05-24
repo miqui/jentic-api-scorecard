@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-alpha.17](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.16...v1.0.0-alpha.17) (2026-05-24)
+
+### Features
+
+- **docker:** add support for unprivileged mode ([270b1c9](https://github.com/jentic/jentic-api-scorecard/commit/270b1c9775091a2dd7d9242a549451c60b1eef94))
+
 # [1.0.0-alpha.16](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.15...v1.0.0-alpha.16) (2026-05-24)
 
 ### Features
