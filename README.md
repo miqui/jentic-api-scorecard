@@ -95,60 +95,49 @@ export JENTIC_API_KEY=mvp-preview
 This is a documented public placeholder for the alpha preview — not a secret. Real key issuance
 arrives in a future release.
 
-## Supply-chain attestations
+## Enterprise-ready by default
 
-Each `@jentic/api-scorecard-cli` alpha release ships with two independent
-[Sigstore](https://www.sigstore.dev/)-signed attestations bound to the published tarball's
-SHA-256 digest. Both are produced inside the GitHub Actions release workflow (no human
-keyholder, no long-lived secrets) and are verifiable with the [GitHub CLI](https://cli.github.com/)
-≥ 2.49.
+For teams that need to know exactly what's running, verify exactly what was
+shipped, and operate without runtime dependencies on us.
 
-| Attestation | Predicate type | What it claims | Where it lives |
-|---|---|---|---|
-| **npm provenance** | `https://slsa.dev/provenance/v1` | Where and how the tarball was built (workflow run, commit SHA, builder identity) | npm registry record + GitHub attestations index |
-| **SPDX SBOM** | `https://spdx.dev/Document/v2.3` | The runtime dependency closure of the published tarball, in [SPDX 2.3](https://spdx.github.io/spdx-spec/v2.3/) form | GitHub attestations index |
+### Auditable end to end
 
-Both attestations are present from **`1.0.0-alpha.11`** onward; earlier alphas have provenance
-only (the SBOM attestation pipeline reached parity with the registry-served bytes in alpha.11).
+Every component in the scoring stack — runner, CLI, release pipeline, and
+engine — is Apache 2.0 licensed and source-readable. No proprietary blobs,
+no closed-source shims. Read the code that's about to grade your specs
+before you adopt it; audit any line, redistribute under the license terms,
+fork if you ever need to.
 
-### Verify a release
+### Signed for regulated environments
 
-```bash
-# 1. Download the published tarball
-npm pack @jentic/api-scorecard-cli@alpha
+Every npm tarball and every GHCR image is signed by [Sigstore](https://www.sigstore.dev/)
+with SLSA provenance and an SPDX SBOM. Signing happens inside an OIDC-driven
+GitHub Actions workflow with no long-lived publishing secrets — there is no
+`NPM_TOKEN`, no PAT, and no human keyholder in the release chain. One command
+verifies an artifact end-to-end before you install it:
 
-# 2. Verify the npm provenance (gh's default predicate type)
-gh attestation verify ./jentic-api-scorecard-cli-*.tgz --owner jentic
+- **[npm package supply chain →](https://github.com/jentic/jentic-api-scorecard/blob/main/docs/supply-chain-npm.md)** —
+  npm provenance, SPDX SBOM, trusted publishing, and the `gh attestation verify` recipes.
+- **[Docker image supply chain →](https://github.com/jentic/jentic-api-scorecard/blob/main/docs/supply-chain-docker.md)** —
+  per-platform SBOMs, dual-store attestations (BuildKit OCI referrers + Sigstore), and
+  verification via either `docker buildx imagetools inspect` or `gh attestation verify`.
 
-# 3. Verify the SPDX SBOM (non-default predicate type, must be requested explicitly)
-gh attestation verify ./jentic-api-scorecard-cli-*.tgz --owner jentic \
-  --predicate-type https://spdx.dev/Document/v2.3
-```
+### Runs anywhere, calls home nowhere
 
-Each successful run reports `Loaded digest sha256:…` and lists the matched attestation.
+The image is a closed system at scoring time: every Python wheel, Node.js
+binary, and validator tarball it needs is baked in at build time. Scoring does
+not call PyPI, npmjs, a Jentic backend, or any external service. Local-file
+inputs and bundled-URL inputs run fully offline; URL inputs make exactly one
+outbound request — fetching the OpenAPI document itself. Multi-arch images
+(linux/amd64 + linux/arm64) ship from the same release, so the same guarantees
+hold on Apple Silicon dev machines, ARM CI runners, and x86 servers alike.
 
-### Download the SBOM
+### Pinned for reproducibility
 
-`gh attestation verify` proves authenticity but doesn't print the SPDX document itself. The
-SBOM is embedded as the `predicate` of the verified in-toto statement; extract it with
-`--format json` and pipe through `jq`:
-
-```bash
-gh attestation verify ./jentic-api-scorecard-cli-*.tgz --owner jentic \
-  --predicate-type https://spdx.dev/Document/v2.3 \
-  --format json \
-  | jq '.[0].verificationResult.statement.predicate' \
-  > sbom.spdx.json
-```
-
-`sbom.spdx.json` is a complete SPDX 2.3 document — the document root carries the published
-package's purl (`pkg:npm/@jentic/api-scorecard-cli@<version>`) and the `packages` array
-enumerates every runtime dependency with its exact resolved version. Feed it directly to any
-SPDX-aware tool ([Trivy](https://trivy.dev/), [Grype](https://github.com/anchore/grype),
-[OSV-Scanner](https://github.com/google/osv-scanner)).
-
-Tying download to verification is deliberate: the recipe above succeeds only if the signature
-checks out, so you never end up with bytes that didn't pass the trust check.
+CLI version, image tag, and engine version are locked one-to-one. Pinning
+`@jentic/api-scorecard-cli@<version>` resolves to a specific image tag, which
+in turn pins an exact engine release and exact validator versions. Last
+month's score is reproducible from last month's pin.
 
 ## Status
 
