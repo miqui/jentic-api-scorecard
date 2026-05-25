@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-alpha.20](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.19...v1.0.0-alpha.20) (2026-05-25)
+
+### Features
+
+- **cli:** add support for LLM-based signals ([#48](https://github.com/jentic/jentic-api-scorecard/issues/48)) ([efdcb97](https://github.com/jentic/jentic-api-scorecard/commit/efdcb971f662a9f2789f4d62717428d79e4b4077))
+
 # [1.0.0-alpha.19](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.18...v1.0.0-alpha.19) (2026-05-25)
 
 ### Bug Fixes
