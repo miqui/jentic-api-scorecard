@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-alpha.21](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.20...v1.0.0-alpha.21) (2026-05-25)
+
+### Bug Fixes
+
+- **ci:** strip devDependencies before SBOM generation ([#49](https://github.com/jentic/jentic-api-scorecard/issues/49)) ([00b801d](https://github.com/jentic/jentic-api-scorecard/commit/00b801db04b23295811ecce2dc13bb800988d4b8)), closes [#25](https://github.com/jentic/jentic-api-scorecard/issues/25)
+
 # [1.0.0-alpha.20](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.19...v1.0.0-alpha.20) (2026-05-25)
 
 ### Features
