@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-alpha.19](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.18...v1.0.0-alpha.19) (2026-05-25)
+
+### Bug Fixes
+
+- **release:** gate release on full ci suite ([#46](https://github.com/jentic/jentic-api-scorecard/issues/46)) ([70ff9f5](https://github.com/jentic/jentic-api-scorecard/commit/70ff9f5b6fb0e8f995120c0726c17796448b4d3b)), closes [#23](https://github.com/jentic/jentic-api-scorecard/issues/23)
+
 # [1.0.0-alpha.18](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.17...v1.0.0-alpha.18) (2026-05-24)
 
 ### Bug Fixes
