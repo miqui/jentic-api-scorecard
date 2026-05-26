@@ -33,7 +33,7 @@ describe('tryParseEngineOutput', function () {
       if (!result.ok) {
         expect(result.exitCode).to.equal(ExitCode.ENGINE_FAILURE);
         expect(result.stderr).to.match(/^error:/);
-        expect(result.stderr).to.include('engine output was not valid JSON');
+        expect(result.stderr).to.include('engine output was not a valid scorecard');
         expect(result.stdout).to.equal('');
       }
     });
@@ -59,5 +59,45 @@ describe('tryParseEngineOutput', function () {
         expect(result.stdout).to.equal(raw);
       }
     });
+  });
+
+  describe('syntactically valid JSON that is not a scorecard', function () {
+    const nonScorecards = [
+      ['number', '42'],
+      ['string', '"hi"'],
+      ['boolean', 'true'],
+      ['null', 'null'],
+      ['array', '[1,2,3]'],
+      ['object missing summary', '{"summary_typo":{}}'],
+      ['object with non-object summary', '{"summary":"oops"}'],
+      ['object with array summary', '{"summary":[]}'],
+      ['object with empty summary', '{"summary":{}}'],
+      ['summary missing score', '{"summary":{"level":"AI-AWARE","grade":"B"}}'],
+      ['summary missing level', '{"summary":{"score":67,"grade":"B"}}'],
+      ['summary missing grade', '{"summary":{"score":67,"level":"AI-AWARE"}}'],
+      ['summary score wrong type', '{"summary":{"score":"67","level":"AI-AWARE","grade":"B"}}'],
+      ['summary level wrong type', '{"summary":{"score":67,"level":1,"grade":"B"}}'],
+      ['summary grade wrong type', '{"summary":{"score":67,"level":"AI-AWARE","grade":null}}'],
+    ] as const;
+
+    for (const [label, raw] of nonScorecards) {
+      it(`escalates ${label} to ENGINE_FAILURE under Format.JSON`, function () {
+        const result = tryParseEngineOutput(raw, Format.JSON);
+        expect(result.ok).to.equal(false);
+        if (!result.ok) {
+          expect(result.exitCode).to.equal(ExitCode.ENGINE_FAILURE);
+          expect(result.stdout).to.equal('');
+        }
+      });
+
+      it(`falls back ${label} to raw passthrough under Format.PRETTY`, function () {
+        const result = tryParseEngineOutput(raw, Format.PRETTY);
+        expect(result.ok).to.equal(false);
+        if (!result.ok) {
+          expect(result.exitCode).to.equal(ExitCode.SUCCESS);
+          expect(result.stdout).to.equal(raw);
+        }
+      });
+    }
   });
 });

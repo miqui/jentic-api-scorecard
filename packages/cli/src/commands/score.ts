@@ -21,25 +21,49 @@ export type ParseEngineOutputResult =
   | { ok: true; parsed: ScorecardResult }
   | { ok: false; exitCode: ExitCode; stderr: string; stdout: string };
 
+function isScorecardShape(value: unknown): value is ScorecardResult {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+  if (!('summary' in value)) {
+    return false;
+  }
+  const summary = (value as { summary: unknown }).summary;
+  if (typeof summary !== 'object' || summary === null || Array.isArray(summary)) {
+    return false;
+  }
+  const s = summary as { score?: unknown; level?: unknown; grade?: unknown };
+  return typeof s.score === 'number' && typeof s.level === 'string' && typeof s.grade === 'string';
+}
+
 export function tryParseEngineOutput(stdout: string, format: Format): ParseEngineOutputResult {
+  let value: unknown;
   try {
-    return { ok: true, parsed: JSON.parse(stdout) as ScorecardResult };
+    value = JSON.parse(stdout);
   } catch {
-    if (format === Format.JSON) {
-      return {
-        ok: false,
-        exitCode: ExitCode.ENGINE_FAILURE,
-        stderr: 'error: engine output was not valid JSON.\n',
-        stdout: '',
-      };
-    }
+    return invalidEngineOutput(format, stdout);
+  }
+  if (!isScorecardShape(value)) {
+    return invalidEngineOutput(format, stdout);
+  }
+  return { ok: true, parsed: value };
+}
+
+function invalidEngineOutput(format: Format, stdout: string): ParseEngineOutputResult {
+  if (format === Format.JSON) {
     return {
       ok: false,
-      exitCode: ExitCode.SUCCESS,
-      stderr: 'warning: engine output was not valid JSON; passing through raw output.\n',
-      stdout,
+      exitCode: ExitCode.ENGINE_FAILURE,
+      stderr: 'error: engine output was not a valid scorecard.\n',
+      stdout: '',
     };
   }
+  return {
+    ok: false,
+    exitCode: ExitCode.SUCCESS,
+    stderr: 'warning: engine output was not a valid scorecard; passing through raw output.\n',
+    stdout,
+  };
 }
 
 function isURL(input: string): boolean {
