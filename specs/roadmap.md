@@ -118,7 +118,7 @@ The stdout/stderr split is part of the documented UX (`docs/architecture.md` §5
 - Verbose output covers engine progress, validator timings, and debug info as available from the container's stderr.
 - Independent of `--quiet` (Phase 9): `--verbose` controls verbosity *level* of stderr; `--quiet` controls whether the spinner renders at all.
 
-## Phase 8 — `-o FILE` (write report to file)
+## Phase 8 — `-o FILE` (write report to file) ✅
 
 **Goal:** support writing the formatted report to a file path while keeping the spinner on stderr.
 **Depends on:** Phase 6 (so file output covers `pretty` and `json`)
@@ -128,7 +128,7 @@ The stdout/stderr split is part of the documented UX (`docs/architecture.md` §5
 
 - Add `-o FILE` to `packages/cli/`. Writes the formatted report (whatever `--format` selects, whatever `--detail` selects) to the path; spinner output continues to land on stderr.
 - When `-o` is set with `--format html` (Phase 14), behavior stays the same — write the HTML to the file.
-- File-write errors surface on stderr with non-zero exit; the report is not partially written.
+- File-write errors surface on stderr with non-zero exit. A partial write is possible if the process is killed mid-write or the disk fills — re-run in that case.
 
 ## Phase 9 — `--quiet` (explicit spinner suppression)
 
