@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-alpha.24](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.23...v1.0.0-alpha.24) (2026-05-26)
+
+### Features
+
+- **cli:** add -o/--output to write report to file ([#77](https://github.com/jentic/jentic-api-scorecard/issues/77)) ([f596734](https://github.com/jentic/jentic-api-scorecard/commit/f5967344de8f0e2b8930f828a09bbc9d1c14110f))
+
 # [1.0.0-alpha.23](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.22...v1.0.0-alpha.23) (2026-05-26)
 
 ### Bug Fixes
