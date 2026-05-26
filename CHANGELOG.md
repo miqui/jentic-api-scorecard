@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-alpha.23](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.22...v1.0.0-alpha.23) (2026-05-26)
+
+### Bug Fixes
+
+- **cli:** validate engine output shape, not just JSON syntax ([#56](https://github.com/jentic/jentic-api-scorecard/issues/56)) ([7d10201](https://github.com/jentic/jentic-api-scorecard/commit/7d102018015d96b1555f1b14902c99fb19bc8101)), closes [#55](https://github.com/jentic/jentic-api-scorecard/issues/55)
+
+### Features
+
+- **cli:** add -f short flag for --format ([#57](https://github.com/jentic/jentic-api-scorecard/issues/57)) ([e6bf510](https://github.com/jentic/jentic-api-scorecard/commit/e6bf510415d029670b70b6e518bf449373f78f73))
+
 # [1.0.0-alpha.22](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.21...v1.0.0-alpha.22) (2026-05-26)
 
 ### Features
