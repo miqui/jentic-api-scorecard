@@ -38,6 +38,27 @@ per-dimension scores, and rolls those up into a single weighted score and grade.
 - Network access to [`ghcr.io`](https://ghcr.io) (to pull the image) and to whatever URL hosts the
   OpenAPI document you're scoring (the engine fetches it from inside the container).
 
+## Install
+
+```bash
+npm install -g @jentic/api-scorecard-cli@alpha
+```
+
+This installs the CLI globally. The scoring engine (Docker image) is downloaded automatically
+the first time you run `score` — allow a minute or two on a typical connection.
+
+Verify the install:
+
+```bash
+jentic-api-scorecard --version
+```
+
+> **Prefer zero-install?** You can skip the global install and use `npx` — every example in
+> this README works with `npx @jentic/api-scorecard-cli@alpha` in place of
+> `jentic-api-scorecard`. The main difference: `npx` always resolves the latest `@alpha`
+> release on each invocation, while `npm install -g` pins you to the installed version until
+> you explicitly update.
+
 ## Try it now
 
 OpenAPI documents from [Jentic Public APIs (OAK)](https://github.com/jentic/jentic-public-apis)
@@ -135,6 +156,11 @@ export JENTIC_API_KEY=mvp-preview
 This is a documented public placeholder for the alpha preview — not a secret. Real key issuance
 arrives in a future release.
 
+## Prefer a browser?
+
+[**jentic.com/scorecard**](https://jentic.com/scorecard) offers the same scoring in a web UI —
+paste a URL or drop a file, no Docker or Node required.
+
 ## Enterprise-ready by default
 
 For teams that need to know exactly what's running, verify exactly what was
@@ -188,6 +214,11 @@ This project is in **alpha**. Track progress in
 
 The `:unstable` Docker image is rebuilt on every push to `main` for direct `docker run` users.
 Versioned images are published alongside each alpha CLI release.
+
+### Scoring engine signal status
+
+To see which Jentic API AI Readiness Framework signals are active in the current release, check out the
+[scoring engine implementation status](https://docs.jentic.com/reference/api-readiness-framework/scoring-engine-status/).
 
 ## License
 
