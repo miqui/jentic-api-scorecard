@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-alpha.25](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.24...v1.0.0-alpha.25) (2026-05-27)
+
+### Features
+
+- **cli:** add -q/--quiet to suppress the stderr spinner ([#83](https://github.com/jentic/jentic-api-scorecard/issues/83)) ([8171496](https://github.com/jentic/jentic-api-scorecard/commit/81714964626127e83b4d6f2ae960e86ba14377dd))
+
 # [1.0.0-alpha.24](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.23...v1.0.0-alpha.24) (2026-05-26)
 
 ### Features
