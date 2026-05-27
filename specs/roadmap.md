@@ -109,14 +109,13 @@ Phase 4 dropped engine-verbatim JSON from the npm CLI's default output. This pha
 ## Phase 7 — `--verbose` / `-v` stderr logging
 
 **Goal:** opt-in verbose stderr logging (engine progress, validator timings, debug info) without changing the report payload on stdout.
-**Depends on:** Phase 4
+**Depends on:** Phase 15
 **Priority:** Medium
 
-The stdout/stderr split is part of the documented UX (`docs/architecture.md` §5): stdout carries the report; stderr carries human-facing progress. `--verbose` is the dial that lets users see more on stderr when something is wrong, without making the spinner default-noisy.
+The stdout/stderr split is part of the documented UX (`docs/architecture.md` §5): stdout carries the report; stderr carries human-facing progress. `--verbose` decides what shows up on stderr when something is wrong, without making the spinner default-noisy. Selective verbose output needs a structured channel to filter — Phase 15's progress events provide it; today's `'inherit'` stdio doesn't.
 
-- Add `--verbose` / `-v` flag. Wired only to the host-side CLI logger; the report payload on stdout is unchanged.
-- Verbose output covers engine progress, validator timings, and debug info as available from the container's stderr.
-- Independent of `--quiet` (Phase 9): `--verbose` controls verbosity *level* of stderr; `--quiet` controls whether the spinner renders at all.
+- Add `--verbose` / `-v`. Host-side only — the report payload on stdout is unchanged.
+- Independent of `--quiet` (Phase 9): `--verbose` controls verbosity *level*; `--quiet` controls whether the spinner renders at all.
 
 ## Phase 8 — `-o FILE` (write report to file) ✅
 
@@ -218,12 +217,28 @@ The HTML formatter is scaffolded in `packages/formatter-html/` after Phase 2 but
 - Lift `"private": true` from `packages/formatter-html/package.json` so the package starts publishing on the same alpha cuts as the CLI.
 - Snapshot-test the formatter against a representative result JSON.
 
+## Phase 15 — Runner becomes a long-lived HTTP server; CLI talks to it via `--api-url`
+
+**Goal:** convert the runner from a one-shot process into a long-lived HTTP server. The CLI auto-manages a local container in local mode and bypasses Docker in remote mode (`--api-url <url>`), so multiple CLIs can share one deployment.
+**Depends on:** Phase 12 (load-bearing breaking change to the container contract — needs the alpha channel to be the surface where it ships)
+**Priority:** Medium–High
+
+Today every `npx … score` is a fresh `docker run` — cold engine, cold validator caches, no path to a shared deployment. A long-lived server fixes both, and gives Phase 7 (`--verbose`) the structured progress channel that today's `'inherit'` stdio cannot provide.
+
+- Container's only entrypoint is the HTTP server; the in-container `score` CLI is removed.
+- Local mode: CLI auto-starts and reuses a container; teardown is a user action.
+- Remote mode (`--api-url`): pure HTTP, no Docker on the client.
+- LLM credentials stay server-side (set at container start in local mode, operator-configured in remote mode) — never per-request.
+- Auth is the existing gate (`docker/src/jentic_scorecard_runner/gate.py`), promoted to per-request. Per-key throughput caps and API-level auth on top of the gate are sequenced separately.
+
+This phase replaces the prior "Later Phases" entry "CLI connecting to remote docker instance with `--api-url` option" — removed in this change.
+
 ## Later Phases (Not Yet Planned)
 
 - `--min-score N` for CI gating — `score --min-score 70` exits non-zero (proposed exit code `7 — score below threshold`, documented in `docs/architecture.md` §6) when `summary.score < N`. Deferred until concrete CI-integrator demand surfaces; once Phase 6 ships `--format json`, integrators can already gate manually with `jq` on the JSON output. Recipe to document when this lands: `score --min-score 70 --format json -o report.json && upload report.json`.
 - Markdown formatter (`--format markdown`) — a Markdown table projection of the scorecard for pasting into PR comments / status checks. Deferred until concrete CI-integrator demand surfaces; `--format json` (Phase 6) covers the machine-readable channel in the meantime.
+- Structured logger across `packages/cli/` — replace ad-hoc `process.stderr.write('error: …')` / `'warning: …'` calls with a level-based logger (likely `consola`). Not a phase on its own — refactor, no user-visible capability. The decision to introduce one (or not) belongs in Phase 7's `plan.md`, since `--verbose` is the first feature that makes log levels load-bearing. Listed here so the question isn't lost.
 - Native binary distribution via `curl -fsSL | bash` (self-extracting archive bundling Node + node_modules; platform-specific builds in CI; requires code signing for macOS/Windows)
-- CLI connecting to remote docker instance with `--api-url` option
 - Multi-spec / portfolio scoring across many APIs in one invocation
 - Plugins / custom rubrics on top of JAIRF
 - `--cpus` / `--memory` flags + matching engine worker-pool hints (deferred until a concrete user-pain signal)
