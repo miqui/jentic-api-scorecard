@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-alpha.27](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.26...v1.0.0-alpha.27) (2026-05-27)
+
+### Features
+
+- **cli:** add --bundle for host-side fetch + bundling ([#89](https://github.com/jentic/jentic-api-scorecard/issues/89)) ([229edb3](https://github.com/jentic/jentic-api-scorecard/commit/229edb3847eb118d630019733a36292d8b8608f2))
+
 # [1.0.0-alpha.26](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.25...v1.0.0-alpha.26) (2026-05-27)
 
 ### Bug Fixes
