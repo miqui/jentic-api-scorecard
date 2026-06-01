@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-alpha.28](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.27...v1.0.0-alpha.28) (2026-06-01)
+
+**Note:** Version bump only for package @jentic/api-scorecard-cli
+
 # [1.0.0-alpha.27](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.26...v1.0.0-alpha.27) (2026-05-27)
 
 ### Features

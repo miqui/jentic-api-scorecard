@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-alpha.28](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.27...v1.0.0-alpha.28) (2026-06-01)
+
+### Features
+
+- **score:** call engine pipeline in-process, drop apitools-cli ([#98](https://github.com/jentic/jentic-api-scorecard/issues/98)) ([1170b5f](https://github.com/jentic/jentic-api-scorecard/commit/1170b5fb8a12307299f1d53bac257d0a8e0de440)), closes [#92](https://github.com/jentic/jentic-api-scorecard/issues/92)
+
 # [1.0.0-alpha.27](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.26...v1.0.0-alpha.27) (2026-05-27)
 
 ### Features
