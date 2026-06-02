@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-alpha.29](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.28...v1.0.0-alpha.29) (2026-06-02)
+
+### Features
+
+- **gate:** validate real keys live and enforce rate limits ([09bfeb7](https://github.com/jentic/jentic-api-scorecard/commit/09bfeb7516a855283dbed5edc5cd0af5dfaf3fb8))
+
 # [1.0.0-alpha.28](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.27...v1.0.0-alpha.28) (2026-06-01)
 
 **Note:** Version bump only for package @jentic/api-scorecard-cli
