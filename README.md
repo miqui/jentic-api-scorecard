@@ -47,6 +47,9 @@ npm install -g @jentic/api-scorecard-cli@alpha
 This installs the latest alpha of the CLI globally. The scoring engine (Docker image) is downloaded automatically
 the first time you run `score` — allow a minute or two on a typical connection.
 
+For local files or non-OAK URLs you'll also need a `JENTIC_API_KEY` — see
+[Anonymous vs keyed access](#anonymous-vs-keyed-access).
+
 Verify the install:
 
 ```bash
@@ -63,7 +66,7 @@ jentic-api-scorecard --version
 ## Try it now
 
 OpenAPI documents from [Jentic Public APIs (OAK)](https://github.com/jentic/jentic-public-apis)
-score without any key or limit — no signup, no config:
+score without any key, uncapped — no signup, no config:
 
 ```bash
 npx @jentic/api-scorecard-cli@alpha score \
@@ -80,6 +83,9 @@ JENTIC_API_KEY=<your-key> npx @jentic/api-scorecard-cli@alpha score \
 ```bash
 JENTIC_API_KEY=<your-key> npx @jentic/api-scorecard-cli@alpha score ./openapi.yaml
 ```
+
+> [!IMPORTANT]
+> Free keys come with **100 scorings per month** (resets at the start of each calendar month). See [Anonymous vs keyed access](#anonymous-vs-keyed-access) for signup and quota details.
 
 That's it. The CLI pulls the scoring engine automatically on first run.
 
@@ -154,17 +160,18 @@ troubleshooting.
 
 OpenAPI documents from [Jentic Public APIs (OAK)](https://github.com/jentic/jentic-public-apis)
 score without any key and stay on the free tier — those URLs bypass key validation entirely.
-For everything else (local files, URLs outside OAK), get a key at [jentic.com/signup](https://jentic.com/signup):
+For everything else (local files, URLs outside OAK), get a key at [jentic.com/signup](https://jentic.com/signup) — once signed in, click **Score → CLI & Keys** to issue your key. Then set it:
 
 ```bash
 export JENTIC_API_KEY=<your-key>
 ```
 
 Real keys are validated live by the container against `api.jentic.com`. The same call doubles
-as the per-key usage / rate-limit accounting hit. If you exceed your quota the CLI exits with
-code `7` and prints the `Retry-After` value.
+as the per-key usage / rate-limit accounting hit. **Each free key gets 100 scorings per month**,
+resetting at the start of each calendar month. Once that quota is exhausted the CLI exits with
+code `7` and prints the `Retry-After` value along with a link to upgrade your plan.
 
-`JENTIC_API_KEY=mvp-preview` is honored as a deprecated free-pass during the alpha and prints
+`JENTIC_API_KEY=mvp-preview` is honored as a **deprecated** free-pass during the alpha and prints
 a `DEPRECATED:`-prefixed stderr warning; it is removed in a follow-up minor release.
 
 ## CLI reference
@@ -210,7 +217,7 @@ jentic-api-scorecard score <input> [options]
 
 | Variable | When | Purpose |
 |---|---|---|
-| `JENTIC_API_KEY` | URLs outside OAK and local files | Real key issued at [jentic.com/signup](https://jentic.com/signup); validated live against `api.jentic.com` (see [Anonymous vs keyed access](#anonymous-vs-keyed-access)). |
+| `JENTIC_API_KEY` | URLs outside OAK and local files | Real key issued at [jentic.com/signup](https://jentic.com/signup); validated live against `api.jentic.com` (see [Anonymous vs keyed access](#anonymous-vs-keyed-access)). **Free quota: 100 scorings per calendar month.** |
 | LLM provider + routing vars | With `--with-llm` | The CLI auto-detects credentials (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, AWS keys) and routing (`LLM_PROVIDER`, `LIGHT_LLM_PROVIDER`, `LLM_MODEL`, `LLM_LIGHT_MODEL`, `*_API_URL`, `LLM_MAX_TOKENS`) and forwards them to the container; loopback URLs are rewritten so a host-side Ollama is reachable. Full reference: [LLM Signals guide](https://github.com/jentic/jentic-api-scorecard/blob/main/docs/llm-signals.md). |
 
 #### Exit codes
@@ -258,15 +265,17 @@ verifies an artifact end-to-end before you install it:
   per-platform SBOMs, dual-store attestations (BuildKit OCI referrers + Sigstore), and
   verification via either `docker buildx imagetools inspect` or `gh attestation verify`.
 
-### Runs anywhere, calls home nowhere
+### Runs anywhere, minimal phone-home
 
 The image is a closed system at scoring time: every Python wheel, Node.js
 binary, and validator tarball it needs is baked in at build time. Scoring does
-not call PyPI, npmjs, a Jentic backend, or any external service. Local-file
-inputs and bundled-URL inputs run fully offline; URL inputs reach the network
-only to fetch the OpenAPI document and resolve any external `$ref`s it points
-at. `--with-llm` optionally sends spec context to an LLM provider of the
-user's choice; a local endpoint (Ollama) keeps everything on-machine. Multi-arch images
+not call PyPI or npmjs and pulls no runtime packages. The **only** outbound
+call to Jentic is a small key-check round-trip against `api.jentic.com` that
+authenticates your key and increments the per-key usage counter; OAK URLs
+(jentic-public-apis) skip even that. URL inputs additionally reach the network to fetch the OpenAPI
+document and resolve any external `$ref`s it points at. `--with-llm`
+optionally sends spec context to an LLM provider of your choice; a local
+endpoint (Ollama) keeps everything on-machine. Multi-arch images
 (linux/amd64 + linux/arm64) ship from the same release, so the same guarantees
 hold on Apple Silicon dev machines, ARM CI runners, and x86 servers alike.
 
