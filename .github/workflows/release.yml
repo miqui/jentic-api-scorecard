@@ -64,7 +64,7 @@ jobs:
         run: |
           git config user.name "${{ steps.app-token.outputs.app-slug }}[bot]"
           git config user.email "${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com"
-          npx lerna version prerelease --preid alpha --no-private --yes --force-publish
+          npx lerna version --conventional-commits --conventional-graduate --no-private --yes --force-publish
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
       - name: Mark release as latest
@@ -132,7 +132,7 @@ jobs:
       - name: Build monorepo
         run: npm run build
       - name: Publish monorepo npm packages
-        run: npx lerna publish from-package --no-private --yes --dist-tag alpha
+        run: npx lerna publish from-package --no-private --yes
       # We attest the registry-served tarball, not a locally-repacked one.
       # `lerna publish` injects a `gitHead` field into package.json before
       # its internal pack, so the bytes the registry serves can't be
