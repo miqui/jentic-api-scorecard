@@ -447,15 +447,56 @@ describe('score command — e2e against docker', function () {
     }
   });
 
-  it('exits with GATE_REJECTED (3) for a non-allowlisted URL with no key', function () {
-    // RFC 6761 reserves .test as never-resolvable, so even if the gate were
-    // bypassed the engine could not fetch the URL.
-    const result = spawnSync('node', [CLI_BIN, 'score', 'https://invalid.test/openapi.yaml'], {
-      env: envWithoutKey(),
-      encoding: 'utf8',
-      timeout: E2E_TIMEOUT_MS,
+  describe('GATE_REJECTED (3) for a non-allowlisted URL with no key (regression: #107)', function () {
+    let exitCode: number | null;
+    let merged: string;
+
+    before(function () {
+      // RFC 6761 reserves .test as never-resolvable, so even if the gate were
+      // bypassed the engine could not fetch the URL. Merge stderr into stdout
+      // via 2>&1 so we can observe the emission order users see on a TTY.
+      const result = spawnSync(
+        'bash',
+        ['-c', 'node "$CLI" score "https://invalid.test/openapi.yaml" 2>&1'],
+        {
+          env: { ...envWithoutKey(), CLI: CLI_BIN },
+          encoding: 'utf8',
+          timeout: E2E_TIMEOUT_MS,
+        },
+      );
+      exitCode = result.status;
+      merged = strip(result.stdout ?? '');
     });
-    expect(result.status).to.equal(3);
+
+    it('exits 3', function () {
+      expect(exitCode).to.equal(3);
+    });
+
+    it('writes the gate error intact', function () {
+      expect(merged).to.include('anonymous scoring is restricted');
+      expect(merged).to.include('jentic-public-apis');
+    });
+
+    it('emits the gate error on its own line, after every spinner frame', function () {
+      // Two regressions to defend against:
+      //   1. The original bug — stderr inherited live, so the error's
+      //      first line shared a row with the ora 'Scoring…' caption.
+      //      Caught by the per-line check: no line contains both.
+      //   2. A future regression that moves the spinner below the error.
+      //      Caught by the index check: 'error:' lands after the last
+      //      'Scoring' frame.
+      for (const line of merged.split('\n')) {
+        expect(
+          line.includes('Scoring') && line.includes('error:'),
+          `spinner and gate error share a line: ${JSON.stringify(line)}`,
+        ).to.equal(false);
+      }
+      const errorIdx = merged.indexOf('error:');
+      const lastSpinnerIdx = merged.lastIndexOf('Scoring');
+      expect(errorIdx, 'gate error missing').to.be.greaterThan(-1);
+      expect(lastSpinnerIdx, 'spinner caption missing').to.be.greaterThan(-1);
+      expect(errorIdx).to.be.greaterThan(lastSpinnerIdx);
+    });
   });
 
   it('URL + --bundle without a key exits with AUTH_INVALID_KEY (2)', async function () {

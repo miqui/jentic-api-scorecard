@@ -199,6 +199,9 @@ export async function runScore(input: string, options: ScoreOptions): Promise<nu
 
   if (result.exitCode !== 0) {
     clearSpinner();
+    if (result.stderr) {
+      process.stderr.write(result.stderr);
+    }
     if (result.stdout) {
       process.stdout.write(result.stdout);
     }
@@ -210,6 +213,9 @@ export async function runScore(input: string, options: ScoreOptions): Promise<nu
   const parseResult = tryParseEngineOutput(result.stdout, format);
   if (!parseResult.ok) {
     clearSpinner();
+    if (result.stderr) {
+      process.stderr.write(result.stderr);
+    }
     process.stderr.write(parseResult.stderr);
     if (parseResult.stdout) {
       if (options.output !== undefined) {
@@ -240,6 +246,9 @@ export async function runScore(input: string, options: ScoreOptions): Promise<nu
       writeReport(output, options.output, format);
     } catch (err) {
       clearSpinner();
+      if (result.stderr) {
+        process.stderr.write(result.stderr);
+      }
       const message = err instanceof Error ? err.message : String(err);
       process.stderr.write(`error: ${message}\n`);
       return ExitCode.GENERIC_ERROR;
@@ -248,6 +257,10 @@ export async function runScore(input: string, options: ScoreOptions): Promise<nu
   } else {
     done(`Scoring done in ${elapsed}s`);
     process.stdout.write(output);
+  }
+
+  if (result.stderr) {
+    process.stderr.write(result.stderr);
   }
 
   return ExitCode.SUCCESS;
