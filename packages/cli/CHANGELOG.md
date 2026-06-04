@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.1](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0...v1.0.1) (2026-06-04)
+
+### Bug Fixes
+
+- **cli:** capture container stderr to keep spinner intact ([#125](https://github.com/jentic/jentic-api-scorecard/issues/125)) ([f649cb6](https://github.com/jentic/jentic-api-scorecard/commit/f649cb6fffcd8497e7142c0355d12752215b9324)), closes [#107](https://github.com/jentic/jentic-api-scorecard/issues/107)
+
 # [1.0.0](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.29...v1.0.0) (2026-06-04)
 
 ### Features
