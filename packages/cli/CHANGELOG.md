@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.29...v1.0.0) (2026-06-04)
+
+### Features
+
+- graduate to stable 1.0.0 with [@latest](https://github.com/latest) npm dist-tag ([#106](https://github.com/jentic/jentic-api-scorecard/issues/106)) ([0942b05](https://github.com/jentic/jentic-api-scorecard/commit/0942b0547cdf0461295507460e9f1a54198389bf)), closes [#115](https://github.com/jentic/jentic-api-scorecard/issues/115) [#114](https://github.com/jentic/jentic-api-scorecard/issues/114) [#114](https://github.com/jentic/jentic-api-scorecard/issues/114) [#115](https://github.com/jentic/jentic-api-scorecard/issues/115)
+
+### BREAKING CHANGES
+
+- `JENTIC_API_KEY=mvp-preview` is no longer recognized.
+  Sign up at https://jentic.com/signup for a real key.
+
 # [1.0.0-alpha.29](https://github.com/jentic/jentic-api-scorecard/compare/v1.0.0-alpha.28...v1.0.0-alpha.29) (2026-06-02)
 
 ### Features
