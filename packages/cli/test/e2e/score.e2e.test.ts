@@ -9,6 +9,7 @@ import { expect } from 'chai';
 import { startMockSpecServer } from './mock-spec-server.ts';
 
 const CLI_BIN = fileURLToPath(new URL('../../bin/jentic-api-scorecard.mjs', import.meta.url));
+const SAMPLE_SPEC = fileURLToPath(new URL('../fixtures/sample.yaml', import.meta.url));
 const OAK_PETSTORE_URL =
   'https://raw.githubusercontent.com/jentic/jentic-public-apis/refs/heads/main/apis/openapi/swagger-api/petstore/1.0.27/openapi.json';
 
@@ -87,7 +88,7 @@ describe('score command — e2e against docker', function () {
     });
   });
 
-  describe('stream interleaving (regression: #84)', function () {
+  describe('stream interleaving', function () {
     let exitCode: number | null;
     let merged: string;
 
@@ -447,7 +448,7 @@ describe('score command — e2e against docker', function () {
     }
   });
 
-  describe('GATE_REJECTED (3) for a non-allowlisted URL with no key (regression: #107)', function () {
+  describe('GATE_REJECTED (3) for a non-allowlisted URL with no key', function () {
     let exitCode: number | null;
     let merged: string;
 
@@ -510,5 +511,31 @@ describe('score command — e2e against docker', function () {
     } finally {
       started.server.close();
     }
+  });
+
+  describe('real JENTIC_API_KEY against the live validator', function () {
+    beforeEach(function () {
+      const realKey = process.env['JENTIC_API_KEY'];
+      if (realKey === undefined || realKey === '') this.skip();
+    });
+
+    it('local-file input exits 0', async function () {
+      const result = await runCliAsync(['score', SAMPLE_SPEC], {
+        ...envWithoutKey(),
+        JENTIC_API_KEY: process.env['JENTIC_API_KEY'],
+      });
+      expect(result.exitCode, `stderr: ${result.stderr}`).to.equal(0);
+      expect(strip(result.stdout)).to.include('API Readiness Scorecard');
+    });
+
+    it('petstore URL + --bundle exits 0', async function () {
+      const result = await runCliAsync(['score', OAK_PETSTORE_URL, '--bundle'], {
+        ...envWithoutKey(),
+        JENTIC_API_KEY: process.env['JENTIC_API_KEY'],
+      });
+      expect(result.exitCode, `stderr: ${result.stderr}`).to.equal(0);
+      expect(strip(result.stdout)).to.include('API Readiness Scorecard');
+      expect(result.stderr).to.include('Bundling');
+    });
   });
 });
