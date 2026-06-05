@@ -5,6 +5,7 @@ import { DEFAULT_DETAIL, DetailLevel, filterByDetail } from '../detail.ts';
 import { imageExists, imageRef, pullImage, runDocker } from '../docker.ts';
 import { ExitCode } from '../exit-codes.ts';
 import { DEFAULT_FORMAT, Format } from '../format.ts';
+import { formatHtml } from '../formatters/html.ts';
 import { formatJson } from '../formatters/json.ts';
 import { formatPretty } from '../formatters/pretty.ts';
 import { detectLlmEnv } from '../llm-env.ts';
@@ -54,7 +55,10 @@ export function tryParseEngineOutput(stdout: string, format: Format): ParseEngin
 }
 
 function invalidEngineOutput(format: Format, stdout: string): ParseEngineOutputResult {
-  if (format === Format.JSON) {
+  // Raw pass-through only makes sense for pretty, where the engine's text is still
+  // human-readable. json and html are structured: passing raw output through would
+  // emit non-JSON / non-HTML while reporting success, so escalate to a hard failure.
+  if (format !== Format.PRETTY) {
     return {
       ok: false,
       exitCode: ExitCode.ENGINE_FAILURE,
@@ -237,7 +241,11 @@ export async function runScore(input: string, options: ScoreOptions): Promise<nu
   const detail = options.detail ?? DEFAULT_DETAIL;
   const filtered = filterByDetail(parsed, detail);
   const output =
-    format === Format.JSON ? formatJson(filtered) : formatPretty(filtered, input, { detail });
+    format === Format.HTML
+      ? formatHtml(filtered)
+      : format === Format.JSON
+        ? formatJson(filtered)
+        : formatPretty(filtered, input, { detail });
 
   const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
 
