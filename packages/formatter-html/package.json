@@ -1,7 +1,6 @@
 {
   "name": "@jentic/api-scorecard-formatter-html",
   "version": "1.0.1",
-  "private": true,
   "description": "HTML formatter for Jentic API Scorecard results.",
   "keywords": [
     "openapi",
@@ -21,7 +20,8 @@
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org",
-    "provenance": true
+    "provenance": true,
+    "tag": "latest"
   },
   "type": "module",
   "main": "./dist/index.js",
