@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.4.0](https://github.com/jentic/jentic-api-scorecard/compare/v1.3.0...v1.4.0) (2026-06-08)
+
+### Features
+
+- **cli:** fail with exit 8 when --with-llm analysis fails ([#144](https://github.com/jentic/jentic-api-scorecard/issues/144)) ([2d38433](https://github.com/jentic/jentic-api-scorecard/commit/2d38433659bdc06fc15d6d531dcdaa3c1f610883)), closes [#142](https://github.com/jentic/jentic-api-scorecard/issues/142)
+
 # [1.3.0](https://github.com/jentic/jentic-api-scorecard/compare/v1.2.1...v1.3.0) (2026-06-08)
 
 **Note:** Version bump only for package @jentic/api-scorecard-cli
