@@ -358,6 +358,7 @@ stdout stays clean so `--format json | jq` works without filtering.
 | 5 | Spec fetch or parse failure (engine exit code 2, passed through). |
 | 6 | Engine invocation failure (any other non-zero engine exit, passed through). |
 | 7 | Rate limit reached: the key is valid but the user is over quota. Message includes the server-provided `detail` and the `Retry-After` header when present. |
+| 8 | LLM analysis failed under `--with-llm`: the provider call failed (auth, model, connectivity, throttling, …), so the LLM-derived signals would be scored as perfect and inflate the result. The CLI suppresses the report and prints the affected signals + provider error on stderr; the non-zero exit lets CI gate on it. Only reachable with `--with-llm`. (The container still streams the scorecard so the host CLI can read it to name the affected signals — see the container exit-code table.) |
 
 ### Error UX examples
 
@@ -531,6 +532,7 @@ The runner always invokes the engine with `--format json --include-diagnostics -
 | 5 | Reserved for spec-policy failure. Currently unreachable since the in-process pipeline does not expose a separate spec-policy exit code; kept defined to preserve the public contract. |
 | 6 | Engine invocation failure (pipeline exception or `result.success == False`). |
 | 7 | Rate limit reached (validator returned 429). |
+| 8 | LLM analysis failed under `--with-llm`: the engine returns `result.success == True` but the LLM batches did not complete, so the affected LLM-derived signals were scored as perfect. Detected from the engine diagnostics two ways — an explicit `llm-analysis-error` (provider auth/model errors) or a `semantic-analysis-summary` reporting batches attempted (`batches_processed > 0`) but zero operations analyzed (`total_operations_analyzed == 0`, the connectivity case). The runner still streams `scorecard.json` to stdout (so the host can read it to name the affected signals) and then returns this code. Only reachable with `--with-llm`. |
 
 The CLI passes these through verbatim and adds its own codes for host-side concerns (4 = Docker missing). The user-facing exit-code contract is §5.
 

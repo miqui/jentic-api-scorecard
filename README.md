@@ -158,6 +158,11 @@ descriptions are actionable for agents, whether error responses support autonomo
 more. Requires an LLM provider: cloud (OpenAI / Anthropic / Gemini / AWS Bedrock) or a local
 OpenAI-compatible endpoint (Ollama, LM Studio, vLLM, …).
 
+Without `--with-llm`, the LLM-backed signals are not evaluated — they hold an assumed-perfect
+baseline score until `--with-llm` actually assesses them. A default (no-`--with-llm`) scorecard
+therefore reflects only the deterministic signals, with the LLM-backed ones sitting at that perfect
+baseline; turn on `--with-llm` to have them genuinely assessed (which can lower your score).
+
 ```bash
 export OPENAI_API_KEY=sk-...
 export LLM_PROVIDER=OPENAI
@@ -170,6 +175,13 @@ JENTIC_API_KEY=<your-key> npx @jentic/api-scorecard-cli@latest score ./openapi.y
 Token cost is low — the engine uses a lightweight model (e.g. Claude Haiku, GPT-4o-mini),
 processes operations in small batches, and caps at 7 batches regardless of spec size. Local
 models (Ollama) cost nothing per call.
+
+If the LLM calls fail (bad credentials, an inaccessible model, an unreachable endpoint), the
+affected LLM-backed signals get scored as perfect — which would inflate their dimension(s) and the
+overall score. Rather than print a misleading scorecard, the CLI **suppresses the report, names the
+affected signals and the provider error on stderr, and exits `8`** — so a CI job running
+`--with-llm` fails loudly instead of passing on an inflated score. Fix the provider error and
+retry, or re-run without `--with-llm` for a valid score from the non-LLM signals.
 
 See **[LLM Signals guide](https://github.com/jentic/jentic-api-scorecard/blob/main/docs/llm-signals.md)**
 for all provider recipes (including local Ollama), the full environment variable reference, and
@@ -248,6 +260,7 @@ jentic-api-scorecard score <input> [options]
 | 5 | Spec fetch or parse failure. |
 | 6 | Engine invocation failure. |
 | 7 | Rate limit reached: the key is valid but the user is over quota. Message includes the server-provided `detail` and the `Retry-After` header when present. |
+| 8 | LLM analysis failed under `--with-llm`: the provider call failed, so the LLM-derived signals would be scored as perfect and inflate the result. The CLI suppresses the report and prints the affected signals + provider error on stderr. Re-run without `--with-llm` for a valid non-LLM score. |
 
 ## Prefer a browser?
 

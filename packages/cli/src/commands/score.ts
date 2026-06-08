@@ -9,6 +9,7 @@ import { formatHtml } from '../formatters/html.ts';
 import { formatJson } from '../formatters/json.ts';
 import { formatPretty } from '../formatters/pretty.ts';
 import { detectLlmEnv } from '../llm-env.ts';
+import { detectLlmFailure, formatLlmFailureError } from '../llm-failure.ts';
 import { writeReport } from '../output.ts';
 import { ScorecardResult } from '../result.ts';
 import { spin, done, clearSpinner, setQuiet } from '../spinner.ts';
@@ -201,7 +202,11 @@ export async function runScore(input: string, options: ScoreOptions): Promise<nu
     return ExitCode.GENERIC_ERROR;
   }
 
-  if (result.exitCode !== 0) {
+  // LLM_FAILURE still streams a valid scorecard on stdout, which we need to read
+  // to name the affected signals — so don't take the raw-passthrough error path
+  // here. The dedicated handler below detects the failure, suppresses the report,
+  // and returns exit 8.
+  if (result.exitCode !== 0 && result.exitCode !== ExitCode.LLM_FAILURE) {
     clearSpinner();
     if (result.stderr) {
       process.stderr.write(result.stderr);
@@ -237,6 +242,17 @@ export async function runScore(input: string, options: ScoreOptions): Promise<nu
     return parseResult.exitCode;
   }
   const parsed = parseResult.parsed;
+
+  // A failed --with-llm run leaves the LLM-derived signals scored as perfect,
+  // inflating their dimension(s) and the overall score. That score is wrong, so
+  // suppress the report entirely and fail — don't print a deceptive scorecard or
+  // the success ribbon. The runner's own terse stderr note is superseded here.
+  const llmFailure = options.withLlm ? detectLlmFailure(parsed) : null;
+  if (llmFailure !== null) {
+    clearSpinner();
+    process.stderr.write(formatLlmFailureError(llmFailure));
+    return ExitCode.LLM_FAILURE;
+  }
 
   const detail = options.detail ?? DEFAULT_DETAIL;
   const filtered = filterByDetail(parsed, detail);
