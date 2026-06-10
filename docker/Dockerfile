@@ -19,8 +19,22 @@ LABEL maintainer="vladimir@jentic.com" \
 
 COPY --from=node:24-slim /usr/local/bin/node /usr/local/bin/node
 COPY --from=node:24-slim /usr/local/lib/node_modules /usr/local/lib/node_modules
+# hadolint ignore=DL3008  # openssl bump below is intentionally unpinned (see comment)
 RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
     ln -s /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx && \
+    # TEMPORARY: patch CVE-2026-45447 (OpenSSL PKCS#7 use-after-free). The fix
+    # is in Debian trixie-security as 3.5.6-1~deb13u2 but not yet baked into
+    # python:3.14-slim. We ship the runtime image, so consumers' container
+    # scanners (and admission controllers) flag it on the image they pull and
+    # can't patch — only a bump here reaches them. Drop this whole apt block
+    # once the base image carries the fix (then the package is current anyway).
+    # Intentionally unpinned: apt installs the newest available candidate (the
+    # fix or any later ~deb13uN), giving ">= fixed version" semantics without a
+    # brittle exact pin that breaks once that version is superseded and dropped.
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+        openssl libssl3t64 openssl-provider-legacy && \
+    rm -rf /var/lib/apt/lists/* && \
     # Refresh bundled npm so its transitive deps (ip-address, brace-expansion, …) carry current fixes.
     npm install -g npm@latest && \
     npm cache clean --force && \
