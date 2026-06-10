@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.4.1](https://github.com/jentic/jentic-api-scorecard/compare/v1.4.0...v1.4.1) (2026-06-10)
+
+### Bug Fixes
+
+- **gate:** point key links at stable app.jentic.com URL ([#149](https://github.com/jentic/jentic-api-scorecard/issues/149)) ([b2f7ab8](https://github.com/jentic/jentic-api-scorecard/commit/b2f7ab8b66b79468e347f9d98181a5f4139a6650)), closes [#126](https://github.com/jentic/jentic-api-scorecard/issues/126)
+
 # [1.4.0](https://github.com/jentic/jentic-api-scorecard/compare/v1.3.0...v1.4.0) (2026-06-08)
 
 ### Features
