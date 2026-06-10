@@ -8,6 +8,16 @@ scores your OpenAPI document against the
 [Jentic API AI Readiness Framework (JAIRF)](https://github.com/jentic/api-ai-readiness-framework)
 across six dimensions and returns a single grade — so you know exactly where to improve.
 
+## Quick start
+
+1. Get a free key at the [Jentic Scorecard API Keys page](https://app.jentic.com/scorecard?tab=api-keys).
+
+2. Score an OpenAPI document:
+
+   ```bash
+   JENTIC_API_KEY=<your-key> npx @jentic/api-scorecard-cli score ./openapi.yaml
+   ```
+
 ## What it scores
 
 Each OpenAPI document is evaluated across six lenses — small, targeted improvements in any of them
