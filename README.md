@@ -272,6 +272,18 @@ paste a URL or drop a file, no Docker or Node required.
 For teams that need to know exactly what's running, verify exactly what was
 shipped, and run without a runtime dependency on Jentic.
 
+### Your OpenAPI document never leaves your environment
+
+Scoring runs entirely in a container **on your own machine**. Local files are
+piped in over stdin; URLs are fetched on your side — by the container's engine,
+or host-side by the CLI when you pass `--bundle` — never by Jentic. Either way,
+your spec is never uploaded.
+
+The **only** call to Jentic is a key-check round-trip against `api.jentic.com` —
+it carries your key, never any part of your spec, and OAK URLs (jentic-public-apis)
+skip even that. The one exception is `--with-llm`, which sends spec context to the
+LLM provider **you** choose (point it at a local Ollama to keep that on-machine too).
+
 ### Auditable end to end
 
 Every component in the scoring stack — runner, CLI, release pipeline, and
@@ -294,19 +306,13 @@ verifies an artifact end-to-end before you install it:
   per-platform SBOMs, dual-store attestations (BuildKit OCI referrers + Sigstore), and
   verification via either `docker buildx imagetools inspect` or `gh attestation verify`.
 
-### Runs anywhere, minimal phone-home
+### Runs anywhere
 
 The image is a closed system at scoring time: every Python wheel, Node.js
-binary, and validator tarball it needs is baked in at build time. Scoring does
-not call PyPI or npmjs and pulls no runtime packages. The **only** outbound
-call to Jentic is a small key-check round-trip against `api.jentic.com` that
-authenticates your key and increments the per-key usage counter; OAK URLs
-(jentic-public-apis) skip even that. URL inputs additionally reach the network to fetch the OpenAPI
-document and resolve any external `$ref`s it points at. `--with-llm`
-optionally sends spec context to an LLM provider of your choice; a local
-endpoint (Ollama) keeps everything on-machine. Multi-arch images
-(linux/amd64 + linux/arm64) ship from the same release, so the same guarantees
-hold on Apple Silicon dev machines, ARM CI runners, and x86 servers alike.
+binary, and validator tarball it needs is baked in at build time, so scoring
+pulls no runtime packages from PyPI or npmjs. Multi-arch images (linux/amd64 +
+linux/arm64) ship from the same release, so the same guarantees hold on Apple
+Silicon dev machines, ARM CI runners, and x86 servers alike.
 
 ### Pinned for reproducibility
 
