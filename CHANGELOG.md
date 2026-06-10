@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.4.2](https://github.com/jentic/jentic-api-scorecard/compare/v1.4.1...v1.4.2) (2026-06-10)
+
+### Bug Fixes
+
+- **docker:** patch CVE-2026-45447 by bumping openssl ([#157](https://github.com/jentic/jentic-api-scorecard/issues/157)) ([bbeb44d](https://github.com/jentic/jentic-api-scorecard/commit/bbeb44d9a5d6132c4474ec761096b10442f8aae2))
+
 ## [1.4.1](https://github.com/jentic/jentic-api-scorecard/compare/v1.4.0...v1.4.1) (2026-06-10)
 
 ### Bug Fixes
