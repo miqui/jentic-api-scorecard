@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.5.1](https://github.com/jentic/jentic-api-scorecard/compare/v1.5.0...v1.5.1) (2026-06-11)
+
+### Features
+
+- **plugin:** add Claude Code plugin marketplace ([#162](https://github.com/jentic/jentic-api-scorecard/issues/162)) ([58db2fe](https://github.com/jentic/jentic-api-scorecard/commit/58db2fe527c60a612c8a0a84faad2e58ac79ebd8))
+
 # [1.5.0](https://github.com/jentic/jentic-api-scorecard/compare/v1.4.3...v1.5.0) (2026-06-11)
 
 ### Features
