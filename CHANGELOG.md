@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.5.2](https://github.com/jentic/jentic-api-scorecard/compare/v1.5.1...v1.5.2) (2026-06-11)
+
+### Bug Fixes
+
+- **score:** correct schema depth via jentic-apitools 1.0.0a18 ([#167](https://github.com/jentic/jentic-api-scorecard/issues/167)) ([8ac0c71](https://github.com/jentic/jentic-api-scorecard/commit/8ac0c71fb67f8631838467b1d2eb3bc48aebf4f6))
+
 ## [1.5.1](https://github.com/jentic/jentic-api-scorecard/compare/v1.5.0...v1.5.1) (2026-06-11)
 
 ### Features
