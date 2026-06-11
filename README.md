@@ -8,6 +8,37 @@ scores your OpenAPI document against the
 [Jentic API AI Readiness Framework (JAIRF)](https://github.com/jentic/api-ai-readiness-framework)
 across six dimensions and returns a single grade — so you know exactly where to improve.
 
+## Table of contents
+
+- [Quick start](#quick-start)
+- [What it scores](#what-it-scores)
+- [How it works](#how-it-works)
+- [Requirements](#requirements)
+- [Install](#install)
+- [Try it now](#try-it-now)
+- [Control output depth](#control-output-depth)
+- [Machine-readable output](#machine-readable-output)
+- [HTML report](#html-report)
+- [LLM analysis](#llm-analysis)
+- [Anonymous vs keyed access](#anonymous-vs-keyed-access)
+- [Agent Skills](#agent-skills)
+  - [Claude Code](#claude-code)
+  - [Vercel `skills` CLI](#vercel-skills-cli)
+  - [TanStack Intent](#tanstack-intent)
+- [CLI reference](#cli-reference)
+  - [Commands](#commands)
+  - [`score`](#score)
+- [Prefer a browser?](#prefer-a-browser)
+- [Enterprise-ready by default](#enterprise-ready-by-default)
+  - [Your OpenAPI document never leaves your environment](#your-openapi-document-never-leaves-your-environment)
+  - [Auditable end to end](#auditable-end-to-end)
+  - [Signed for regulated environments](#signed-for-regulated-environments)
+  - [Runs anywhere](#runs-anywhere)
+  - [Pinned for reproducibility](#pinned-for-reproducibility)
+- [Status](#status)
+  - [Scoring engine signal status](#scoring-engine-signal-status)
+- [License](#license)
+
 ## Quick start
 
 1. Get a free key at the [Jentic Scorecard API Keys page](https://app.jentic.com/scorecard?tab=api-keys).
@@ -99,8 +130,6 @@ JENTIC_API_KEY=<your-key> npx @jentic/api-scorecard-cli@latest score ./openapi.y
 That's it. The CLI pulls the scoring engine automatically on first run.
 
 ![CLI score output](https://github.com/jentic/jentic-api-scorecard/raw/main/assets/cli-screenshot.png)
-
-
 
 ## Control output depth
 
