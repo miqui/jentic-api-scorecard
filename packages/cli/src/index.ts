@@ -48,15 +48,25 @@ export async function main(argv: string[] = process.argv): Promise<void> {
           output?: string;
           quiet?: boolean;
         },
+        command: Command,
       ) => {
-        const validationError = validateScoreOptions(
-          { format: opts.format, output: opts.output },
+        const verdict = validateScoreOptions(
+          {
+            format: opts.format,
+            output: opts.output,
+            detail: opts.detail,
+            detailIsExplicit: command.getOptionValueSource('detail') === 'cli',
+          },
           process.stdout.isTTY === true,
         );
-        if (validationError !== null) {
-          process.stderr.write(`error: ${validationError}\n`);
+        if (verdict.error !== null) {
+          process.stderr.write(`error: ${verdict.error}\n`);
           process.exitCode = ExitCode.GENERIC_ERROR;
           return;
+        }
+        // Emitted before runScore starts the stderr spinner, so the line is not garbled.
+        if (verdict.warning !== null) {
+          process.stderr.write(`warning: ${verdict.warning}\n`);
         }
 
         const exitCode = await runScore(input, {
