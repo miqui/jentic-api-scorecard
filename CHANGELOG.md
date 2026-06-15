@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.7.0](https://github.com/jentic/jentic-api-scorecard/compare/v1.6.0...v1.7.0) (2026-06-15)
+
+### Features
+
+- **cli:** add --format sarif diagnostics encoder ([#182](https://github.com/jentic/jentic-api-scorecard/issues/182)) ([9d7b41b](https://github.com/jentic/jentic-api-scorecard/commit/9d7b41b587cfa04ce28b6f60dcfb884e458052ff)), closes [#176](https://github.com/jentic/jentic-api-scorecard/issues/176)
+
 # [1.6.0](https://github.com/jentic/jentic-api-scorecard/compare/v1.5.2...v1.6.0) (2026-06-15)
 
 ### Features
