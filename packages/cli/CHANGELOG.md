@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.6.0](https://github.com/jentic/jentic-api-scorecard/compare/v1.5.2...v1.6.0) (2026-06-15)
+
+### Features
+
+- **cli:** add --format markdown GFM scorecard formatter ([#181](https://github.com/jentic/jentic-api-scorecard/issues/181)) ([94a6667](https://github.com/jentic/jentic-api-scorecard/commit/94a666700f023fd73930d8d76c784ac15e80da65))
+
 ## [1.5.2](https://github.com/jentic/jentic-api-scorecard/compare/v1.5.1...v1.5.2) (2026-06-11)
 
 **Note:** Version bump only for package @jentic/api-scorecard-cli
