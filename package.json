@@ -24,7 +24,10 @@
     "lint": "lerna run lint",
     "lint:fix": "lerna run lint:fix",
     "lint:docker": "docker run --rm -i hadolint/hadolint:v2.14.0 < docker/Dockerfile",
-    "prepare": "husky"
+    "prepare": "husky",
+    "docs:extract": "node scripts/extract-docs.js",
+    "docs:extract:dry-run": "node scripts/extract-docs.js --dry-run",
+    "docs:extract:preview": "node scripts/extract-docs.js --output-dir /tmp/jentic-scorecard-docs"
   },
   "overrides": {
     "@conventional-changelog/git-client": {
