@@ -6,6 +6,10 @@ import { cliVersion } from './version.ts';
 
 export const IMAGE_NAME = 'ghcr.io/jentic/jentic-api-scorecard';
 
+const DOCKER_MISSING_MESSAGE =
+  "error: 'docker' command not found.\n" +
+  '  Install Docker: https://docs.docker.com/get-docker/\n';
+
 export function imageRef(): string {
   return `${IMAGE_NAME}:${cliVersion}`;
 }
@@ -35,8 +39,11 @@ export function pullImage(ref: string): Promise<PullResult> {
       });
     }
     child.on('error', (err: NodeJS.ErrnoException) => {
-      const exitCode = err.code === 'ENOENT' ? ExitCode.DOCKER_MISSING : ExitCode.GENERIC_ERROR;
-      resolve({ exitCode, stderr: err.message });
+      if (err.code === 'ENOENT') {
+        resolve({ exitCode: ExitCode.DOCKER_MISSING, stderr: DOCKER_MISSING_MESSAGE });
+        return;
+      }
+      resolve({ exitCode: ExitCode.GENERIC_ERROR, stderr: err.message });
     });
     child.on('close', (code) => {
       resolve({
@@ -157,9 +164,7 @@ export function runDocker(opts: DockerRunOptions): Promise<DockerRunResult> {
           resolve({
             exitCode: ExitCode.DOCKER_MISSING,
             stdout: '',
-            stderr:
-              "error: 'docker' command not found.\n" +
-              '  Install Docker: https://docs.docker.com/get-docker/\n',
+            stderr: DOCKER_MISSING_MESSAGE,
           }),
         );
         return;
