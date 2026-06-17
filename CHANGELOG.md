@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.8.6](https://github.com/jentic/jentic-api-scorecard/compare/v1.8.5...v1.8.6) (2026-06-17)
+
+### Bug Fixes
+
+- **action:** meet marketplace description cap and brand color ([#202](https://github.com/jentic/jentic-api-scorecard/issues/202)) ([82c4d85](https://github.com/jentic/jentic-api-scorecard/commit/82c4d857f7a99511ba50463271c2e6519d1f8499))
+- **README:** render header badges inline on marketplace ([#203](https://github.com/jentic/jentic-api-scorecard/issues/203)) ([bbe768e](https://github.com/jentic/jentic-api-scorecard/commit/bbe768e23151675461f75fa392eb0d7838cccdba))
+
 ## [1.8.5](https://github.com/jentic/jentic-api-scorecard/compare/v1.8.4...v1.8.5) (2026-06-17)
 
 ### Bug Fixes
