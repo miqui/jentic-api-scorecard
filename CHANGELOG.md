@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.8.0](https://github.com/jentic/jentic-api-scorecard/compare/v1.7.0...v1.8.0) (2026-06-17)
+
+### Features
+
+- add GitHub Action for CI scoring ([#190](https://github.com/jentic/jentic-api-scorecard/issues/190)) ([51a6cc8](https://github.com/jentic/jentic-api-scorecard/commit/51a6cc8caf24b342c9c0e0ef55a429d6f12a746e)), closes [#191](https://github.com/jentic/jentic-api-scorecard/issues/191)
+
 # [1.7.0](https://github.com/jentic/jentic-api-scorecard/compare/v1.6.0...v1.7.0) (2026-06-15)
 
 ### Features
