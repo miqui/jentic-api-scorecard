@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.8.5](https://github.com/jentic/jentic-api-scorecard/compare/v1.8.4...v1.8.5) (2026-06-17)
+
+### Bug Fixes
+
+- **cli:** show friendly message when docker is missing ([#192](https://github.com/jentic/jentic-api-scorecard/issues/192)) ([b860a07](https://github.com/jentic/jentic-api-scorecard/commit/b860a07ace22c0f77b775a9361b3cbdbbdb3e6f3)), closes [#183](https://github.com/jentic/jentic-api-scorecard/issues/183)
+
 ## [1.8.4](https://github.com/jentic/jentic-api-scorecard/compare/v1.8.3...v1.8.4) (2026-06-17)
 
 **Note:** Version bump only for package @jentic/api-scorecard-cli
