@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.8.1](https://github.com/jentic/jentic-api-scorecard/compare/v1.8.0...v1.8.1) (2026-06-17)
+
+### Bug Fixes
+
+- **action:** anchor postprocess npm install to action/ dir ([#198](https://github.com/jentic/jentic-api-scorecard/issues/198)) ([41a7ae9](https://github.com/jentic/jentic-api-scorecard/commit/41a7ae92dad77f1a4836d0f409286c637cdf82f2)), closes [#190](https://github.com/jentic/jentic-api-scorecard/issues/190)
+
 # [1.8.0](https://github.com/jentic/jentic-api-scorecard/compare/v1.7.0...v1.8.0) (2026-06-17)
 
 ### Features
