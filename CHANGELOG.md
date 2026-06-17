@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.8.2](https://github.com/jentic/jentic-api-scorecard/compare/v1.8.1...v1.8.2) (2026-06-17)
+
+### Bug Fixes
+
+- **release:** fix failed v1.8.1 release ([4328da7](https://github.com/jentic/jentic-api-scorecard/commit/4328da77db7dd3c4bbe236665e29ddc370b15251))
+
 ## [1.8.1](https://github.com/jentic/jentic-api-scorecard/compare/v1.8.0...v1.8.1) (2026-06-17)
 
 ### Bug Fixes
