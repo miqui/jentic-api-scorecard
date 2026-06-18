@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.8.7](https://github.com/jentic/jentic-api-scorecard/compare/v1.8.6...v1.8.7) (2026-06-18)
+
+**Note:** Version bump only for package @jentic/api-scorecard-formatter-html
+
 ## [1.8.6](https://github.com/jentic/jentic-api-scorecard/compare/v1.8.5...v1.8.6) (2026-06-17)
 
 **Note:** Version bump only for package @jentic/api-scorecard-formatter-html
