@@ -1,0 +1,77 @@
+{
+  "source": "README.md",
+  "pages": [
+    {
+      "id": "cli-reference",
+      "output": "docs/cli/api-scorecard.md",
+      "title": "API Scorecard \u2013 CLI Reference",
+      "intro": "The **Jentic API Scorecard CLI** scores OpenAPI Descriptions against the [Jentic API AI Readiness Framework (JAIRF)](../reference/api-readiness-framework/overview.md) across six dimensions, returning a single grade and actionable recommendations.\n\nScoring runs entirely locally inside a Docker container \u2014 your spec never leaves your environment.\n\n---",
+      "sections": [
+        { "heading": "Requirements" },
+        { "heading": "Try it now", "rename": "Quick start", "suffix": "> **Prefer a permanent install?** See [Install](#install) below to set up the CLI globally." },
+        { "heading": "Install" },
+        { "heading": "Control output depth" },
+        { "heading": "Machine-readable output" },
+        { "heading": "HTML report" },
+        { "heading": "LLM analysis" },
+        { "heading": "Anonymous vs keyed access" },
+        { "heading": "CLI reference" },
+        { "heading": "Prefer a browser?" }
+      ],
+      "relatedLinks": [
+        { "text": "API Scoring \u2013 Getting Started", "href": "../getting-started/api-scoring.md" },
+        { "text": "Agent Skill", "href": "./api-scorecard-skill.md" },
+        { "text": "GitHub Action", "href": "./api-scorecard-action.md" },
+        { "text": "Enterprise Readiness", "href": "./api-scorecard-enterprise.md" },
+        { "text": "JAIRF Overview", "href": "../reference/api-readiness-framework/overview.md" },
+        { "text": "jentic/jentic-api-scorecard \u2013 source and full documentation", "href": "https://github.com/jentic/jentic-api-scorecard" }
+      ]
+    },
+    {
+      "id": "agent-skill",
+      "output": "docs/cli/api-scorecard-skill.md",
+      "title": "API Scorecard \u2013 Agent Skill",
+      "intro": "The Jentic API Scorecard ships a versioned **agent skill** that teaches AI coding agents how to use the CLI correctly. Install it through whichever path fits your agent.\n\n---",
+      "sections": [
+        { "heading": "Agent Skills" }
+      ],
+      "relatedLinks": [
+        { "text": "CLI Reference", "href": "./api-scorecard.md" },
+        { "text": "GitHub Action", "href": "./api-scorecard-action.md" },
+        { "text": "API Scoring \u2013 Getting Started", "href": "../getting-started/api-scoring.md" },
+        { "text": "Skill definition (SKILL.md)", "href": "https://github.com/jentic/jentic-api-scorecard/blob/main/skills/jentic-api-scorecard/SKILL.md" }
+      ]
+    },
+    {
+      "id": "github-action",
+      "output": "docs/cli/api-scorecard-action.md",
+      "title": "API Scorecard \u2013 GitHub Action",
+      "intro": "The Jentic API Scorecard ships a **composite GitHub Action** that wraps the CLI for CI pipelines. It scores an OpenAPI document, gates the build on the score, uploads SARIF findings to the Security tab, attaches an HTML scorecard as a downloadable artifact, and renders a Markdown summary on the run page.\n\n---",
+      "sections": [
+        { "heading": "GitHub Action" }
+      ],
+      "relatedLinks": [
+        { "text": "CLI Reference", "href": "./api-scorecard.md" },
+        { "text": "Agent Skill", "href": "./api-scorecard-skill.md" },
+        { "text": "API Scoring \u2013 Getting Started", "href": "../getting-started/api-scoring.md" },
+        { "text": "LLM Signals guide", "href": "https://github.com/jentic/jentic-api-scorecard/blob/main/docs/llm-signals.md" },
+        { "text": "jentic/jentic-api-scorecard \u2013 source and full documentation", "href": "https://github.com/jentic/jentic-api-scorecard" }
+      ]
+    },
+    {
+      "id": "enterprise-readiness",
+      "output": "docs/cli/api-scorecard-enterprise.md",
+      "title": "API Scorecard \u2013 Enterprise Readiness",
+      "intro": "The Jentic API Scorecard is designed for teams that need to know exactly what\u2019s running, verify exactly what was shipped, and operate without a runtime dependency on Jentic infrastructure.\n\n---",
+      "sections": [
+        { "heading": "Enterprise-ready by default" }
+      ],
+      "relatedLinks": [
+        { "text": "CLI Reference", "href": "./api-scorecard.md" },
+        { "text": "npm package supply chain", "href": "https://github.com/jentic/jentic-api-scorecard/blob/main/docs/supply-chain-npm.md" },
+        { "text": "Docker image supply chain", "href": "https://github.com/jentic/jentic-api-scorecard/blob/main/docs/supply-chain-docker.md" },
+        { "text": "jentic/jentic-api-scorecard \u2013 source and full documentation", "href": "https://github.com/jentic/jentic-api-scorecard" }
+      ]
+    }
+  ]
+}

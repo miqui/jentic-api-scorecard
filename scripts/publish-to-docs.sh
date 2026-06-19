@@ -1,0 +1,218 @@
+#!/bin/bash
+# publish-to-docs.sh
+#
+# Extracts sections from README.md via extract-docs.js and publishes the
+# resulting pages to the jentic-docs repository as a pull request.
+#
+# Usage:
+#   bash scripts/publish-to-docs.sh [--dry-run] <commit-sha> [github-token]
+#
+# The GitHub token can also be supplied via the GH_TOKEN environment variable
+# (preferred — avoids token exposure in process listings).
+#
+# Options:
+#   --dry-run   Run extraction and validate output, but skip all git operations.
+#
+# Requirements:
+#   - Node.js (same version as the project)
+#   - git
+#   - gh (GitHub CLI) — for PR creation
+
+set -euo pipefail
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+# ── Args ─────────────────────────────────────────────────────────────────────
+DRY_RUN=false
+if [[ "${1:-}" == "--dry-run" ]]; then
+  DRY_RUN=true
+  shift
+fi
+
+COMMIT_SHA=${1:?"Usage: $0 [--dry-run] <commit-sha> [github-token]  (or set GH_TOKEN env var)"}
+GH_TOKEN=${2:-${GH_TOKEN:-}}
+if [ -z "${GH_TOKEN}" ]; then
+  echo "Error: GitHub token required — pass as second argument or set GH_TOKEN env var" >&2
+  exit 1
+fi
+
+echo -e "${GREEN}=== Publishing API Scorecard docs to jentic-docs ===${NC}"
+
+cd "$(dirname "$0")/.."
+REPO_ROOT=$(pwd)
+
+# ── Version ───────────────────────────────────────────────────────────────────
+# grep-based to avoid ESM/require() issues with the root "type":"module"
+VERSION=$(grep '"version"' packages/cli/package.json | head -1 | sed 's/.*"version": "\([^"]*\)".*/\1/')
+if [ -z "$VERSION" ]; then
+  echo -e "${RED}❌ Failed to extract version from packages/cli/package.json${NC}"
+  exit 1
+fi
+
+TIMESTAMP=$(date -u +"%Y-%m-%d")
+BRANCH_NAME="update-api-scorecard-docs-v${VERSION}"
+STAGING_DIR="${REPO_ROOT}/.staging"
+
+echo "Version:   ${VERSION}"
+echo "Branch:    ${BRANCH_NAME}"
+echo "Commit:    ${COMMIT_SHA:0:8}"
+echo "Timestamp: ${TIMESTAMP}"
+
+# ── Cleanup ───────────────────────────────────────────────────────────────────
+WORK_DIR=$(mktemp -d -t scorecard-docs-XXXXXX)
+cleanup() {
+  if [ "$DRY_RUN" = false ]; then
+    rm -rf "${WORK_DIR}" "${STAGING_DIR}"
+  else
+    echo -e "${YELLOW}Dry-run: staging dir kept at ${STAGING_DIR}${NC}"
+  fi
+}
+trap cleanup EXIT
+
+# ── Extract ───────────────────────────────────────────────────────────────────
+echo ""
+echo "Extracting docs from README.md..."
+rm -rf "${STAGING_DIR}"
+node scripts/extract-docs.js --output-dir "${STAGING_DIR}"
+echo -e "${GREEN}✅ Extraction complete${NC}"
+
+# ── Validate ──────────────────────────────────────────────────────────────────
+echo ""
+echo "Validating staged files..."
+OUTPUT_PATHS=$(node --input-type=commonjs -e "const cfg=require('./docs/publish-config.json'); process.stdout.write(cfg.pages.map(p=>p.output).join('\n'))")
+if [ -z "${OUTPUT_PATHS}" ]; then
+  echo -e "${RED}❌ Failed to read output paths from docs/publish-config.json${NC}"
+  exit 1
+fi
+while IFS= read -r output; do
+  staged="${STAGING_DIR}/${output}"
+  if [ ! -s "${staged}" ]; then
+    echo -e "${RED}❌ Missing or empty: ${output}${NC}"
+    exit 1
+  fi
+  echo "  ✓ ${output} ($(wc -l < "${staged}") lines)"
+done <<< "${OUTPUT_PATHS}"
+
+if [ "$DRY_RUN" = true ]; then
+  echo ""
+  echo -e "${YELLOW}DRY RUN — stopping before git operations${NC}"
+  echo "Staged files in: ${STAGING_DIR}"
+  exit 0
+fi
+
+# ── Clone jentic-docs ─────────────────────────────────────────────────────────
+echo ""
+echo "Cloning jentic-docs..."
+cd "${WORK_DIR}"
+git clone --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/jentic/jentic-docs.git" jentic-docs
+cd jentic-docs
+
+# Reset origin to a token-free URL; inject credentials via http.extraheader (not persisted to .git/config on disk)
+git remote set-url origin "https://github.com/jentic/jentic-docs.git"
+git config http.extraheader "AUTHORIZATION: bearer ${GH_TOKEN}"
+
+git config user.name "github-actions[bot]"
+git config user.email "github-actions[bot]@users.noreply.github.com"
+
+# ── Branch ────────────────────────────────────────────────────────────────────
+echo ""
+if git ls-remote --exit-code --heads origin "${BRANCH_NAME}" > /dev/null 2>&1; then
+  echo -e "${YELLOW}⚠️  Branch ${BRANCH_NAME} already exists — updating${NC}"
+  git fetch origin "${BRANCH_NAME}"
+  git checkout "${BRANCH_NAME}"
+  git pull origin "${BRANCH_NAME}"
+else
+  echo "Creating branch: ${BRANCH_NAME}"
+  git checkout -b "${BRANCH_NAME}"
+fi
+
+# ── Copy files ────────────────────────────────────────────────────────────────
+echo ""
+echo "Copying files..."
+while IFS= read -r output; do
+  mkdir -p "$(dirname "${output}")"
+  cp "${STAGING_DIR}/${output}" "${output}"
+  echo "  → ${output}"
+done <<< "${OUTPUT_PATHS}"
+
+# ── Diff ──────────────────────────────────────────────────────────────────────
+echo ""
+echo "Checking for changes..."
+if git diff --quiet && git diff --cached --quiet; then
+  echo -e "${YELLOW}⚠️  No changes — docs already up to date${NC}"
+  exit 0
+fi
+
+echo ""
+git diff --stat
+
+# ── Commit ────────────────────────────────────────────────────────────────────
+echo ""
+echo "Committing..."
+git add .
+
+UPDATED_LIST=$(echo "${OUTPUT_PATHS}" | sed 's/^/  - /')
+
+git commit -m "$(cat <<EOF
+docs: update API Scorecard documentation to v${VERSION}
+
+- Sync from jentic-api-scorecard@${COMMIT_SHA:0:8}
+- Updated files:
+${UPDATED_LIST}
+
+Generated by automated workflow
+Source: https://github.com/jentic/jentic-api-scorecard/commit/${COMMIT_SHA}
+EOF
+)"
+
+# ── Push ──────────────────────────────────────────────────────────────────────
+echo ""
+echo "Pushing to remote..."
+git push origin "${BRANCH_NAME}"
+
+# ── PR ────────────────────────────────────────────────────────────────────────
+echo ""
+export GH_TOKEN
+EXISTING_PR=$(gh pr list --head "${BRANCH_NAME}" --json number --jq '.[0].number' 2>/dev/null || echo "")
+
+if [ -n "$EXISTING_PR" ]; then
+  echo "✅ PR #${EXISTING_PR} already exists — updated with new commits"
+else
+  PR_URL=$(gh pr create \
+    --title "Update API Scorecard documentation to v${VERSION}" \
+    --body "$(cat <<EOF
+## Summary
+
+Automated update of the Jentic API Scorecard documentation from the source repository.
+
+## Changes
+
+- **Version**: ${VERSION}
+- **Source commit**: [\`${COMMIT_SHA:0:8}\`](https://github.com/jentic/jentic-api-scorecard/commit/${COMMIT_SHA})
+- **Updated files**:
+${UPDATED_LIST}
+
+## Review checklist
+
+- [ ] Content is accurate and up to date
+- [ ] Links and code examples work correctly
+- [ ] Navigation in MkDocs is correct
+- [ ] No formatting issues
+
+## Related
+
+- Source: https://github.com/jentic/jentic-api-scorecard
+- Config: [docs/publish-config.json](https://github.com/jentic/jentic-api-scorecard/blob/main/docs/publish-config.json)
+- Automated by: [publish-to-docs workflow](https://github.com/jentic/jentic-api-scorecard/blob/main/.github/workflows/publish-to-docs.yml)
+EOF
+)" \
+    --base main \
+    --head "${BRANCH_NAME}")
+  echo -e "${GREEN}✅ PR created: ${PR_URL}${NC}"
+fi
+
+echo ""
+echo -e "${GREEN}🎉 Done!${NC}"
