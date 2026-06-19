@@ -28,6 +28,10 @@ const ROOT = path.resolve(__dirname, '..');
 // ── CLI args ────────────────────────────────────────────────────────────────
 const args = process.argv.slice(2);
 const outputDirIdx = args.indexOf('--output-dir');
+if (outputDirIdx >= 0 && !args[outputDirIdx + 1]) {
+  console.error('❌  Missing value for --output-dir');
+  process.exit(1);
+}
 const outputDir = path.resolve(ROOT, outputDirIdx >= 0 ? args[outputDirIdx + 1] : '.staging');
 const dryRun = args.includes('--dry-run');
 

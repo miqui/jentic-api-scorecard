@@ -5,7 +5,10 @@
 # resulting pages to the jentic-docs repository as a pull request.
 #
 # Usage:
-#   bash scripts/publish-to-docs.sh [--dry-run] <commit-sha> <github-token>
+#   bash scripts/publish-to-docs.sh [--dry-run] <commit-sha> [github-token]
+#
+# The GitHub token can also be supplied via the GH_TOKEN environment variable
+# (preferred — avoids token exposure in process listings).
 #
 # Options:
 #   --dry-run   Run extraction and validate output, but skip all git operations.
@@ -29,8 +32,12 @@ if [[ "${1:-}" == "--dry-run" ]]; then
   shift
 fi
 
-COMMIT_SHA=${1:?"Usage: $0 [--dry-run] <commit-sha> <github-token>"}
-GH_TOKEN=${2:?"Usage: $0 [--dry-run] <commit-sha> <github-token>"}
+COMMIT_SHA=${1:?"Usage: $0 [--dry-run] <commit-sha> [github-token]  (or set GH_TOKEN env var)"}
+GH_TOKEN=${2:-${GH_TOKEN:-}}
+if [ -z "${GH_TOKEN}" ]; then
+  echo "Error: GitHub token required — pass as second argument or set GH_TOKEN env var" >&2
+  exit 1
+fi
 
 echo -e "${GREEN}=== Publishing API Scorecard docs to jentic-docs ===${NC}"
 
@@ -75,7 +82,11 @@ echo -e "${GREEN}✅ Extraction complete${NC}"
 # ── Validate ──────────────────────────────────────────────────────────────────
 echo ""
 echo "Validating staged files..."
-OUTPUT_PATHS=$(grep '"output"' docs/publish-config.json | sed 's/.*"output": "\([^"]*\)".*/\1/')
+OUTPUT_PATHS=$(node --input-type=commonjs -e "const cfg=require('./docs/publish-config.json'); process.stdout.write(cfg.pages.map(p=>p.output).join('\n'))")
+if [ -z "${OUTPUT_PATHS}" ]; then
+  echo -e "${RED}❌ Failed to read output paths from docs/publish-config.json${NC}"
+  exit 1
+fi
 while IFS= read -r output; do
   staged="${STAGING_DIR}/${output}"
   if [ ! -s "${staged}" ]; then
@@ -96,8 +107,12 @@ fi
 echo ""
 echo "Cloning jentic-docs..."
 cd "${WORK_DIR}"
-git clone --depth 1 "https://${GH_TOKEN}@github.com/jentic/jentic-docs.git" jentic-docs
+git clone --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/jentic/jentic-docs.git" jentic-docs
 cd jentic-docs
+
+# Reset origin to a token-free URL; inject credentials via helper at push time only
+git remote set-url origin "https://github.com/jentic/jentic-docs.git"
+git config credential.helper "!f() { echo username=x-access-token; echo password=${GH_TOKEN}; }; f"
 
 git config user.name "github-actions[bot]"
 git config user.email "github-actions[bot]@users.noreply.github.com"
