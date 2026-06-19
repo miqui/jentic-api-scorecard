@@ -111,27 +111,95 @@ function sarifArtifactUri(input) {
   return value.replace(/^\.\//, '');
 }
 
+// Build a locator mapping a diagnostic's JSON Pointer to a source line/column,
+// or null when no mapping is possible (URL/non-file input, or apidom absent —
+// the caller then falls back to line 1). apidom is imported dynamically so the
+// self-test's skip-install path degrades via the catch instead of a load error.
+async function createSourceLocator(input) {
+  const uri = String(input ?? '').trim();
+
+  if (uri === '') return null;
+
+  try {
+    const { parse, url } = await import('@speclynx/apidom-reference');
+
+    if (!url.isFileSystemPath(uri)) return null;
+
+    const {
+      evaluate,
+      parse: parsePointer,
+      compile: compilePointer,
+    } = await import('@speclynx/apidom-json-pointer');
+    // input is relative to the checkout root, which is the helper's cwd (same cwd
+    // the score step read it from); resolve it against that.
+    const sourcePath = url.toFileSystemPath(url.resolve(url.cwd(), uri));
+    const parseResult = await parse(sourcePath, {
+      parse: { parserOpts: { sourceMap: true, strict: false } },
+      resolve: { resolverOpts: { fileAllowList: [/\.(ya?ml|json)$/i] } },
+    });
+    const api = parseResult.api;
+    if (api === undefined) {
+      return null;
+    }
+    return (pointer) => {
+      const parsed = parsePointer(String(pointer ?? ''));
+      if (!parsed.result.success) {
+        return null;
+      }
+      const tokens = parsed.tree;
+      while (tokens.length > 0) {
+        try {
+          const node = evaluate(api, compilePointer(tokens));
+          // apidom 0-based → 1-based SARIF. Include only integer fields so a
+          // node missing a position never emits a NaN region.
+          if (Number.isInteger(node.startLine) && Number.isInteger(node.startCharacter)) {
+            const region = { startLine: node.startLine + 1, startColumn: node.startCharacter + 1 };
+            if (Number.isInteger(node.endLine) && Number.isInteger(node.endCharacter)) {
+              region.endLine = node.endLine + 1;
+              region.endColumn = node.endCharacter + 1;
+            }
+            return region;
+          }
+        } catch {
+          // fall through to strip the last token
+        }
+        tokens.pop();
+      }
+      return null;
+    };
+  } catch {
+    return null;
+  }
+}
+
 // GitHub Code Scanning refuses to ingest a SARIF result that has no
 // physicalLocation ("expected a physical location") — logicalLocations alone are
-// not enough to land a finding in the Security tab. The engine emits JSON
-// Pointers, not file line/column, so we attach a minimal physicalLocation
-// pointing at the scored document at line 1; existing logicalLocations are
-// preserved alongside. Real pointer→line mapping is tracked in issue #191.
-function addPhysicalLocations(doc, artifactUri) {
-  const physicalLocation = {
+// not enough to land a finding in the Security tab. Each result's logical
+// location carries the engine's JSON Pointer; when `locate` maps it to a real
+// source position we use that, otherwise we fall back to line 1 (URL inputs,
+// unresolvable pointers, no source). Existing logicalLocations are preserved
+// alongside. See createSourceLocator and issue #191.
+async function addPhysicalLocations(doc, artifactUri, locate) {
+  const toPhysicalLocation = (pointer) => ({
     artifactLocation: { uri: artifactUri },
-    region: { startLine: 1 },
-  };
+    region: (locate && pointer ? locate(pointer) : null) ?? { startLine: 1 },
+  });
   const runs = (doc.runs ?? []).map((run) => ({
     ...run,
     results: (run.results ?? []).map((result) => {
       const existing = Array.isArray(result.locations) ? result.locations : [];
-      // Add the physicalLocation to the first location (keeping its
-      // logicalLocations), or create one when the result had no locations.
+      // Give every location its own physicalLocation mapped from its own logical
+      // pointer (a diagnostic may carry several), keeping its logicalLocations.
+      // A result with no locations still needs one so code-scanning ingests it.
       const locations =
         existing.length > 0
-          ? [{ ...existing[0], physicalLocation }, ...existing.slice(1)]
-          : [{ physicalLocation }];
+          ? existing.map((location) => ({
+              ...location,
+              physicalLocation: toPhysicalLocation(
+                location.logicalLocations?.[0]?.fullyQualifiedName,
+              ),
+            }))
+          : [{ physicalLocation: toPhysicalLocation(undefined) }];
       return { ...result, locations };
     }),
   }));
@@ -208,12 +276,15 @@ async function main() {
   // The scored input, used as the SARIF physicalLocation artifact URI so Code
   // Scanning can ingest the results. A bare default keeps a URL/empty input valid.
   const artifactUri = sarifArtifactUri(env['INPUT']);
+  // Parse the source once (local-file inputs only) to map JSON Pointers to real
+  // source lines; null for URLs / on any failure → line-1 fallback per result.
+  const locate = await createSourceLocator(env['INPUT']);
 
   const { formatSarif, formatMarkdown, formatHtml } = await loadFormatters();
 
   // SARIF: full doc, physical locations (Code Scanning needs them), then the
   // severity filter, then the findings cap.
-  const fullSarif = addPhysicalLocations(JSON.parse(formatSarif(result)), artifactUri);
+  const fullSarif = await addPhysicalLocations(JSON.parse(formatSarif(result)), artifactUri, locate);
   const filtered = filterSarifBySeverity(fullSarif, severity);
   const { doc: cappedSarif, dropped } = capFindings(filtered, maxFindings);
   if (dropped > 0) {
