@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.9.0](https://github.com/jentic/jentic-api-scorecard/compare/v1.8.7...v1.9.0) (2026-06-19)
+
+### Features
+
+- **action:** map SARIF pointers to real source line/column range ([#218](https://github.com/jentic/jentic-api-scorecard/issues/218)) ([fbddd6b](https://github.com/jentic/jentic-api-scorecard/commit/fbddd6b56fd38d3c373c12d2fe672d7043351a37)), closes [#191](https://github.com/jentic/jentic-api-scorecard/issues/191)
+
 ## [1.8.7](https://github.com/jentic/jentic-api-scorecard/compare/v1.8.6...v1.8.7) (2026-06-18)
 
 ### Bug Fixes
