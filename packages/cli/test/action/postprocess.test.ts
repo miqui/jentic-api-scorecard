@@ -13,9 +13,33 @@ const fixture = readFileSync(fixturePath, 'utf8');
 const schemaPath = fileURLToPath(new URL('../fixtures/sarif-2.1.0.schema.json', import.meta.url));
 const sarifSchema = JSON.parse(readFileSync(schemaPath, 'utf8'));
 
+// A real engine capture of ../fixtures/ref-source.yaml (a $ref-bearing spec), so
+// a bundled diagnostic pointer that dives into the inlined response
+// over-specifies against the source entry document — exercising strip-fallback.
+// Regenerate via the engine: see docker/ run against ref-source.yaml.
+const refSourcePath = fileURLToPath(new URL('../fixtures/ref-source.yaml', import.meta.url));
+const refReportPath = fileURLToPath(
+  new URL('../fixtures/scorecard.ref-source.json', import.meta.url),
+);
+const refReport = readFileSync(refReportPath, 'utf8');
+
+interface SarifRegion {
+  startLine: number;
+  startColumn?: number;
+  endLine?: number;
+  endColumn?: number;
+}
+interface SarifPhysicalLocation {
+  artifactLocation: { uri: string };
+  region?: SarifRegion;
+}
+interface SarifLocation {
+  physicalLocation?: SarifPhysicalLocation;
+  logicalLocations?: { fullyQualifiedName: string }[];
+}
 interface SarifResult {
   level: string;
-  locations?: { physicalLocation?: { artifactLocation: { uri: string } } }[];
+  locations?: SarifLocation[];
 }
 interface SarifLog {
   runs: { results: SarifResult[] }[];
@@ -293,6 +317,100 @@ describe('postprocess helper (black-box)', function () {
     it('includes the per-signal section at signals depth', function () {
       const md = runPostprocess({ SUMMARY_DETAIL: 'signals' }).markdown;
       expect(md).to.contain('## Signals');
+    });
+  });
+
+  describe('SARIF source line mapping', function () {
+    // The region mapped onto the location whose logical pointer matches (RFC 6901),
+    // scanning every location since a diagnostic may carry several pointers.
+    function regionForPointer(sarif: SarifLog, pointer: string): SarifRegion | undefined {
+      return allResults(sarif)
+        .flatMap((result) => result.locations ?? [])
+        .find((loc) => loc.logicalLocations?.[0]?.fullyQualifiedName === pointer)?.physicalLocation
+        ?.region;
+    }
+
+    let sarif: SarifLog;
+
+    before(function () {
+      // INPUT is the absolute ref-source.yaml path: createSourceLocator resolves
+      // it (absolute → unchanged) and apidom parses the real source, so pointers
+      // map to real lines. SEVERITY note keeps all findings for richer coverage.
+      sarif = runPostprocess({ INPUT: refSourcePath, SEVERITY: 'note' }, refReport).sarif;
+    });
+
+    it('maps an exactly-resolving pointer to its real source range', function () {
+      // ref-source.yaml line 11 is `      operationId: listPets`; the mapped
+      // range spans the whole value node so code-scanning highlights it all.
+      const region = regionForPointer(sarif, '/paths/~1pets/get/operationId');
+      expect(region?.startLine).to.equal(11);
+      expect(region?.startColumn).to.be.a('number').and.greaterThan(1);
+      expect(region?.endLine).to.equal(11);
+      expect(region?.endColumn)
+        .to.be.a('number')
+        .and.greaterThan(region?.startColumn ?? 0);
+    });
+
+    it('spans a multi-line node from its start to its end line', function () {
+      // The PetList component object opens on line 18 and closes on line 28.
+      const region = regionForPointer(sarif, '/components/responses/PetList');
+      expect(region?.startLine).to.equal(18);
+      expect(region?.endLine).to.equal(28);
+    });
+
+    it('strips an over-specified pointer to its nearest existing ancestor', function () {
+      // The bundled pointer dives into the inlined 200 response; in the source
+      // that node is a bare $ref (line 14), so it strips back to the 200 response
+      // value node — apidom maps the value, not the "200" key on line 13.
+      const region = regionForPointer(
+        sarif,
+        '/paths/~1pets/get/responses/200/content/application~1json/schema',
+      );
+      expect(region?.startLine).to.equal(14);
+    });
+
+    it('falls back to line 1 for a pointer absent from the source', function () {
+      // The spec declares no servers, so the `servers` pointer resolves to nothing.
+      const region = regionForPointer(sarif, '/servers');
+      expect(region?.startLine).to.equal(1);
+    });
+
+    it('still emits SARIF that validates against the schema with real regions', function () {
+      const ajv = new Ajv({ strict: false, allErrors: true, logger: false });
+      const validate = ajv.compile(sarifSchema);
+      expect(validate(sarif), JSON.stringify(validate.errors?.slice(0, 3))).to.equal(true);
+      const lines = allResults(sarif).map(
+        (r) => r.locations?.[0]?.physicalLocation?.region?.startLine,
+      );
+      expect(lines.some((line) => typeof line === 'number' && line > 1)).to.equal(true);
+    });
+  });
+
+  describe('SARIF source line mapping — graceful degradation', function () {
+    function startLines(sarif: SarifLog): (number | undefined)[] {
+      return allResults(sarif).map((r) => r.locations?.[0]?.physicalLocation?.region?.startLine);
+    }
+
+    it('keeps every result at line 1 for a URL input (no source in the checkout)', function () {
+      const url =
+        'https://raw.githubusercontent.com/jentic/jentic-public-apis/refs/heads/main/apis/openapi/swagger-api/petstore/1.0.27/openapi.json';
+      const run = runPostprocess({ INPUT: url, SEVERITY: 'note' });
+      expect(run.status).to.equal(0);
+      expect(startLines(run.sarif).every((line) => line === 1)).to.equal(true);
+    });
+
+    it('keeps every result at line 1 when the local file does not exist', function () {
+      const run = runPostprocess({ INPUT: './does-not-exist.yaml', SEVERITY: 'note' });
+      expect(run.status).to.equal(0);
+      expect(startLines(run.sarif).every((line) => line === 1)).to.equal(true);
+    });
+
+    it('keeps every result at line 1 for a non-filesystem, non-URL input', function () {
+      // A host:port input is neither an http URL nor a filesystem path; the
+      // positive isFileSystemPath check rejects it rather than trying to parse it.
+      const run = runPostprocess({ INPUT: 'localhost:3000/openapi.json', SEVERITY: 'note' });
+      expect(run.status).to.equal(0);
+      expect(startLines(run.sarif).every((line) => line === 1)).to.equal(true);
     });
   });
 });
