@@ -110,9 +110,9 @@ cd "${WORK_DIR}"
 git clone --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/jentic/jentic-docs.git" jentic-docs
 cd jentic-docs
 
-# Reset origin to a token-free URL; inject credentials via helper at push time only
+# Reset origin to a token-free URL; inject credentials via http.extraheader (not persisted to .git/config on disk)
 git remote set-url origin "https://github.com/jentic/jentic-docs.git"
-git config credential.helper "!f() { echo username=x-access-token; echo password=${GH_TOKEN}; }; f"
+git config http.extraheader "AUTHORIZATION: bearer ${GH_TOKEN}"
 
 git config user.name "github-actions[bot]"
 git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -206,7 +206,7 @@ ${UPDATED_LIST}
 
 - Source: https://github.com/jentic/jentic-api-scorecard
 - Config: [docs/publish-config.json](https://github.com/jentic/jentic-api-scorecard/blob/main/docs/publish-config.json)
-- Automated by: [publish-to-docs workflow](https://github.com/jentic/jentic-api-scorecard/blob/main/.github/workflows/publish-to-docs.yaml)
+- Automated by: [publish-to-docs workflow](https://github.com/jentic/jentic-api-scorecard/blob/main/.github/workflows/publish-to-docs.yml)
 EOF
 )" \
     --base main \
