@@ -110,10 +110,7 @@ cd "${WORK_DIR}"
 git clone --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/jentic/jentic-docs.git" jentic-docs
 cd jentic-docs
 
-# Reset origin to a token-free URL; inject credentials via http.extraheader (not persisted to .git/config on disk)
-git remote set-url origin "https://github.com/jentic/jentic-docs.git"
-git config http.extraheader "AUTHORIZATION: bearer ${GH_TOKEN}"
-
+# Token is scoped to this job's temp dir (removed by trap cleanup EXIT).
 git config user.name "github-actions[bot]"
 git config user.email "github-actions[bot]@users.noreply.github.com"
 
