@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.9.1](https://github.com/jentic/jentic-api-scorecard/compare/v1.9.0...v1.9.1) (2026-06-22)
+
+### Bug Fixes
+
+- **docker:** patch undici CVE-2026-12151 in image ([#230](https://github.com/jentic/jentic-api-scorecard/issues/230)) ([fa96270](https://github.com/jentic/jentic-api-scorecard/commit/fa96270a26b83071f708e744b65169c9289ed052)), closes [#321](https://github.com/jentic/jentic-api-scorecard/issues/321) [#322](https://github.com/jentic/jentic-api-scorecard/issues/322)
+
+### Features
+
+- **docs:** add automated docs publishing to jentic-docs ([38c82cf](https://github.com/jentic/jentic-api-scorecard/commit/38c82cf50b54145d8893415726aa4746d7acea2b))
+
 # [1.9.0](https://github.com/jentic/jentic-api-scorecard/compare/v1.8.7...v1.9.0) (2026-06-19)
 
 ### Features
