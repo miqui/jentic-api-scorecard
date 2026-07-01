@@ -51,6 +51,21 @@ if (!fs.existsSync(sourcePath)) {
 }
 const sourceLines = fs.readFileSync(sourcePath, 'utf8').split('\n');
 
+// ── Heading level shift ──────────────────────────────────────────────────────
+// Shifts all ATX headings in an array of lines by `shift` levels.
+// Positive shift makes headings deeper (## → ####); negative makes them shallower.
+// Levels are clamped to [1, 6].
+
+function shiftHeadings(lines, shift) {
+  if (!shift) return lines;
+  return lines.map(line => {
+    const match = line.match(/^(#{1,6}) (.+)$/);
+    if (!match) return line;
+    const newLevel = Math.min(6, Math.max(1, match[1].length + shift));
+    return '#'.repeat(newLevel) + ' ' + match[2];
+  });
+}
+
 // ── GitHub callout → MkDocs admonition ──────────────────────────────────────
 // GitHub renders `> [!TYPE]\n> content` as styled callouts; MkDocs does not.
 // This function converts them to MkDocs `!!! type\n    content` admonitions.
@@ -80,9 +95,9 @@ function convertCallouts(lines) {
   return out;
 }
 
-// ── Parse source into H2 sections ───────────────────────────────────────────
-// Each section spans from `## Heading` up to (but not including) the next `## Heading`.
-// Sub-headings (H3, H4, …) are captured as part of their parent H2 section.
+// ── Parse source into H2 and H3 sections ────────────────────────────────────
+// H2 sections span from `## Heading` to the next `## Heading` (H3+ are included).
+// H3 sections span from `### Heading` to the next `## Heading` or `### Heading`.
 
 function normalise(heading) {
   return heading.toLowerCase().replace(/`/g, '').trim();
@@ -90,20 +105,35 @@ function normalise(heading) {
 
 /** @type {Map<string, { original: string; lines: string[] }>} */
 const sections = new Map();
+/** @type {Map<string, { original: string; lines: string[] }>} */
+const h3Sections = new Map();
 let current = null;
+let currentH3 = null;
 
 for (const line of sourceLines) {
   const h2 = line.match(/^## (.+)$/);
+  const h3 = line.match(/^### (.+)$/);
   if (h2) {
     current = { original: h2[1].trim(), lines: [] };
     sections.set(normalise(current.original), current);
+    currentH3 = null;
+  } else if (h3) {
+    // H3 heading line is added to the parent H2 section (for full-section extraction)
+    if (current !== null) {
+      current.lines.push(line);
+    }
+    currentH3 = { original: h3[1].trim(), lines: [] };
+    h3Sections.set(normalise(currentH3.original), currentH3);
   } else if (current !== null) {
     current.lines.push(line);
+    if (currentH3 !== null) {
+      currentH3.lines.push(line);
+    }
   }
 }
 
 // Trim trailing blank lines from each section
-for (const section of sections.values()) {
+for (const section of [...sections.values(), ...h3Sections.values()]) {
   while (section.lines.length > 0 && section.lines.at(-1).trim() === '') {
     section.lines.pop();
   }
@@ -136,11 +166,14 @@ for (const page of config.pages) {
   for (const entry of page.sections) {
     const heading = typeof entry === 'string' ? entry : entry.heading;
     const rename = typeof entry === 'object' && entry.rename ? entry.rename : null;
+    const level = typeof entry === 'object' && entry.level === 3 ? 3 : 2;
+    const headingShift = typeof entry === 'object' && entry.headingShift != null ? entry.headingShift : 0;
 
-    const section = sections.get(normalise(heading));
+    const sectionMap = level === 3 ? h3Sections : sections;
+    const section = sectionMap.get(normalise(heading));
     if (!section) {
       console.error(
-        `❌  [${page.id}] Section not found in ${config.source ?? 'README.md'}: "${heading}"`,
+        `❌  [${page.id}] H${level} section not found in ${config.source ?? 'README.md'}: "${heading}"`,
       );
       hasErrors = true;
       continue;
@@ -151,7 +184,7 @@ for (const page of config.pages) {
       out.push('');
       out.push(entry.prefix);
     }
-    out.push(...convertCallouts(section.lines));
+    out.push(...convertCallouts(shiftHeadings(section.lines, headingShift)));
     if (entry.suffix) {
       out.push('');
       out.push(entry.suffix);

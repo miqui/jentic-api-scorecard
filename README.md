@@ -8,7 +8,10 @@ An OpenAPI document that passes validation isn't necessarily one an AI agent can
 one thing; semantic clarity, safety, and discoverability are another. The **Jentic API Scorecard**
 scores your OpenAPI document against the
 [Jentic API AI Readiness Framework (JAIRF)](https://github.com/jentic/api-ai-readiness-framework)
-across six dimensions and returns a single grade — so you know exactly where to improve.
+across six dimensions and returns a single grade — so you know exactly where to improve. Pair it
+with the companion **api-improve** agent skill to apply those improvements automatically:
+non-breaking edits, a reusable
+[OpenAPI Overlay](https://spec.openapis.org/overlay/v1.1.0.html), and a before/after changelog.
 
 ## Table of contents
 
@@ -23,14 +26,9 @@ across six dimensions and returns a single grade — so you know exactly where t
 - [HTML report](#html-report)
 - [LLM analysis](#llm-analysis)
 - [Anonymous vs keyed access](#anonymous-vs-keyed-access)
-- [Agent Skills](#agent-skills)
-  - [Claude Code](#claude-code)
-  - [Vercel `skills` CLI](#vercel-skills-cli)
-  - [TanStack Intent](#tanstack-intent)
-- [The api-improve skill](#the-api-improve-skill)
-  - [Claude Code](#claude-code-1)
-  - [Vercel `skills` CLI](#vercel-skills-cli-1)
-  - [TanStack Intent](#tanstack-intent-1)
+- [Skills](#skills)
+  - [jentic-api-scorecard](#jentic-api-scorecard)
+  - [jentic-api-improve](#jentic-api-improve)
 - [CLI reference](#cli-reference)
   - [Commands](#commands)
   - [`score`](#score)
@@ -248,14 +246,24 @@ as the per-key usage / rate-limit accounting hit. **Each free key gets 100 scori
 resetting at the start of each calendar month. Once that quota is exhausted the CLI exits with
 code `7` and prints the `Retry-After` value along with a link to upgrade your plan.
 
-## Agent Skills
+## Skills
 
-This repository ships a versioned [agent skill](https://github.com/jentic/jentic-api-scorecard/blob/main/skills/jentic-api-scorecard/SKILL.md)
+This repository ships two complementary agent skills — install either or both through
+whichever path fits your agent.
+
+| Skill | Purpose |
+|---|---|
+| `jentic-api-scorecard` | Teaches coding agents to use the scoring CLI: scoring files and URLs, producing JSON/HTML, wiring into CI, and interpreting exit codes. |
+| `jentic-api-improve` | Closes the loop: applies non-breaking improvements to a spec automatically, producing an improved spec, an OpenAPI Overlay, and a before/after changelog. |
+
+### jentic-api-scorecard
+
+A versioned [agent skill](https://github.com/jentic/jentic-api-scorecard/blob/main/skills/jentic-api-scorecard/SKILL.md)
 that teaches AI coding agents how to use the CLI correctly — installing it, scoring
 files and URLs, producing JSON/HTML, wiring it into CI, enabling LLM analysis, and
-interpreting exit codes. Install it through whichever path fits your agent.
+interpreting exit codes.
 
-### Claude Code
+#### Claude Code
 
 [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) users install it
 as a [plugin](https://docs.claude.com/en/docs/claude-code/plugins) — this repository
@@ -277,7 +285,7 @@ no explicit invocation needed:
 To force it into context regardless of phrasing, invoke it explicitly with
 `/api-scorecard:jentic-api-scorecard`.
 
-### Vercel `skills` CLI
+#### Vercel `skills` CLI
 
 Install it straight from this repository with the
 [`skills` CLI](https://github.com/vercel-labs/skills):
@@ -288,13 +296,13 @@ npx skills add jentic/jentic-api-scorecard --skill jentic-api-scorecard
 
 It's also listed in the [skills.sh directory](https://skills.sh/jentic/jentic-api-scorecard).
 
-### TanStack Intent
+#### TanStack Intent
 
 The `@jentic/api-scorecard-cli` npm package also ships this skill inside its published
 tarball, so it's discoverable by [TanStack Intent](https://tanstack.com/intent) for
 projects that already depend on the CLI and want version-aligned agent guidance.
 
-## The api-improve skill
+### jentic-api-improve
 
 Scoring tells you _what_ to fix; the `jentic-api-improve` skill closes the loop and
 _fixes_ it. Point an AI coding agent at an OpenAPI document and it runs a baseline
@@ -317,9 +325,9 @@ pipx install check-jsonschema         # overlay schema validation
 ```
 
 Install the skill through whichever path fits your agent — the same three channels as
-the [scoring skill](#agent-skills):
+the [scoring skill](#jentic-api-scorecard):
 
-### Claude Code
+#### Claude Code
 
 The improve skill is a **separate plugin** in this repository's marketplace:
 
@@ -336,13 +344,13 @@ for multi-iteration improvement loops). Once installed, ask Claude to improve a 
 > Raise the JAIRF score of my API and give me an overlay
 ```
 
-### Vercel `skills` CLI
+#### Vercel `skills` CLI
 
 ```bash
 npx skills add jentic/jentic-api-scorecard --skill jentic-api-improve
 ```
 
-### TanStack Intent
+#### TanStack Intent
 
 The `@jentic/api-scorecard-cli` npm package ships this skill (and the companion agent
 definition) inside its published tarball, so it's discoverable by
