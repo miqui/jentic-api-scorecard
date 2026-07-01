@@ -184,7 +184,12 @@ for (const page of config.pages) {
       out.push('');
       out.push(entry.prefix);
     }
-    out.push(...convertCallouts(shiftHeadings(section.lines, headingShift)));
+    const replacements = typeof entry === 'object' && Array.isArray(entry.contentReplacements) ? entry.contentReplacements : [];
+    const processedLines = replacements.reduce(
+      (lines, { from, to }) => lines.map(line => line.replaceAll(from, to)),
+      shiftHeadings(section.lines, headingShift),
+    );
+    out.push(...convertCallouts(processedLines));
     if (entry.suffix) {
       out.push('');
       out.push(entry.suffix);
