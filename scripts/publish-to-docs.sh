@@ -118,9 +118,8 @@ git config user.email "github-actions[bot]@users.noreply.github.com"
 echo ""
 if git ls-remote --exit-code --heads origin "${BRANCH_NAME}" > /dev/null 2>&1; then
   echo -e "${YELLOW}⚠️  Branch ${BRANCH_NAME} already exists — updating${NC}"
-  git fetch origin "${BRANCH_NAME}"
+  git fetch origin "${BRANCH_NAME}":"${BRANCH_NAME}"
   git checkout "${BRANCH_NAME}"
-  git pull origin "${BRANCH_NAME}"
 else
   echo "Creating branch: ${BRANCH_NAME}"
   git checkout -b "${BRANCH_NAME}"
