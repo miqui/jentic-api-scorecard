@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.9.3](https://github.com/jentic/jentic-api-scorecard/compare/v1.9.2...v1.9.3) (2026-07-01)
+
+### Bug Fixes
+
+- **publish-to-docs:** fix checkout of existing remote branch ([f08a53a](https://github.com/jentic/jentic-api-scorecard/commit/f08a53a0613ec627cd5714f7ddf3801efbb0c2a5))
+- **skills:** bind rmtree path to a var to clear SkillSpector ([48f8514](https://github.com/jentic/jentic-api-scorecard/commit/48f8514e9d270990169c0f151d171243d17846d0)), closes [#267](https://github.com/jentic/jentic-api-scorecard/issues/267)
+
+### Features
+
+- **marketplace:** add api-improve plugin (skill + agent) ([476348a](https://github.com/jentic/jentic-api-scorecard/commit/476348aa5174fa44e4a6b4c1ed630126cf29b91c)), closes [#267](https://github.com/jentic/jentic-api-scorecard/issues/267)
+
 ## [1.9.2](https://github.com/jentic/jentic-api-scorecard/compare/v1.9.1...v1.9.2) (2026-06-24)
 
 ### Bug Fixes
